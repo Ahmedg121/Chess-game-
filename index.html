@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>شطرنج سوداني - تصميم أحمد جلال ÂĜ</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
@@ -13,6 +13,7 @@
       --night-white: #444;
       --night-black: #222;
       --night-text: #eee;
+      --highlight-blue: rgba(30, 144, 255, 0.4);
     }
     body {
       margin: 0;
@@ -51,32 +52,50 @@
     }
     .board {
       display: grid;
-      grid-template-columns: repeat(8, 60px);
-      grid-template-rows: repeat(8, 60px);
+      grid-template-columns: repeat(8, 55px);
+      grid-template-rows: repeat(8, 55px);
       border: 3px solid #333;
       margin-bottom: 10px;
+      user-select: none;
     }
     .cell {
-      width: 60px;
-      height: 60px;
+      width: 55px;
+      height: 55px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
+      font-size: 28px;
       cursor: pointer;
+      position: relative;
+      box-sizing: border-box;
     }
     .white { background-color: var(--white); }
     .black { background-color: var(--black); }
     .night .white { background-color: var(--night-white); }
     .night .black { background-color: var(--night-black); }
     .selected { outline: 3px solid red; }
-    #controls { margin: 10px; display: flex; gap: 10px; }
-    button {
+    .highlight-move {
+      position: absolute;
+      top: 3px; left: 3px; right: 3px; bottom: 3px;
+      background-color: var(--highlight-blue);
+      border-radius: 10px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    #controls { margin: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;}
+    button, select {
       padding: 5px 12px;
       font-size: 14px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      background: #4a90e2;
+      color: white;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    button:hover, select:hover {
+      background: #357ABD;
     }
     .night {
       background-color: #111;
@@ -93,13 +112,22 @@
   <div id="dedication">أول نسخة مهداة إلى حوش المنا</div>
   <div id="version">إصدار أول - 2025</div>
 
+  <div>
+    <label for="gameMode" style="font-weight:bold; margin-bottom:8px; display:block;">اختر وضع اللعب:</label>
+    <select id="gameMode" aria-label="وضع اللعب">
+      <option value="human">🧑 لعب مع شخص</option>
+      <option value="ai-easy">🤖 ذكاء اصطناعي (سهل)</option>
+      <option value="ai-hard">🧠 ذكاء اصطناعي (صعب)</option>
+    </select>
+  </div>
+
   <div id="turnInfo">الدور: الأبيض</div>
   <div id="timers">
     ⏱️ وقت الأبيض: <span id="whiteTimer">05:00</span>
     | ⏱️ وقت الأسود: <span id="blackTimer">05:00</span>
   </div>
 
-  <div class="board" id="chessboard"></div>
+  <div class="board" id="chessboard" aria-label="لوحة شطرنج"></div>
   <div id="controls">
     <button onclick="undoMove()">تراجع</button>
     <button onclick="toggleNightMode()">الوضع الليلي</button>
@@ -112,6 +140,7 @@
     const turnInfo = document.getElementById("turnInfo");
     const whiteTimerEl = document.getElementById("whiteTimer");
     const blackTimerEl = document.getElementById("blackTimer");
+    const gameModeSelect = document.getElementById("gameMode");
 
     const pieceIcons = {
       'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
@@ -124,20 +153,9 @@
     let moveHistory = [];
     let whiteTime = 300, blackTime = 300;
     let timerInterval;
-    let gameMode = 'human'; // Default game mode
+    let aiThinking = false;
 
     const moveSound = new Audio('https://upload.wikimedia.org/wikipedia/commons/8/88/Chess_move.wav');
-
-    // Game Mode Selector
-    const gameModeSelect = document.createElement("select");
-    gameModeSelect.id = "gameMode";
-    gameModeSelect.innerHTML = `
-      <option value="human">🧑 لعب مع شخص</option>
-      <option value="ai-easy">🤖 ذكاء اصطناعي (سهل)</option>
-      <option value="ai-hard">🧠 ذكاء اصطناعي (صعب)</option>
-    `;
-    gameModeSelect.onchange = () => resetGame();
-    document.body.prepend(gameModeSelect);
 
     function setupBoard() {
       const layout = [
@@ -160,9 +178,14 @@
           board.appendChild(cell);
         }
       }
+      clearSelection();
+      selected = null;
+      highlightMoves([]);
     }
 
     function onCellClick(r, c) {
+      if (aiThinking) return;  // تمنع اللعب في دور AI
+
       const piece = boardState[r][c];
       const cell = getCell(r, c);
 
@@ -179,18 +202,39 @@
           }
 
           updateBoard();
+          moveSound.play();
+
           if (isCheckmate(opponent())) {
             setTimeout(() => alert('ابلع يا زول! كش مات!'), 200);
           }
           currentTurn = opponent();
           turnInfo.textContent = `الدور: ${currentTurn === 'w' ? 'الأبيض' : 'الأسود'}`;
+          startTimer();
+
+          selected = null;
+          clearSelection();
+          highlightMoves([]);
+
+          if (gameModeSelect.value !== 'human' && currentTurn === 'b') {
+            aiThinking = true;
+            setTimeout(() => {
+              if(gameModeSelect.value === 'ai-easy') makeEasyAIMove();
+              else makeHardAIMove();
+              aiThinking = false;
+              startTimer();
+            }, 600);
+          }
+        } else {
+          clearSelection();
+          selected = null;
+          highlightMoves([]);
         }
-        clearSelection();
-        selected = null;
       } else if (piece && piece[0] === currentTurn) {
         clearSelection();
         selected = [r, c];
         cell.classList.add('selected');
+        const moves = getAllValidMoves(r, c);
+        highlightMoves(moves);
       }
     }
 
@@ -200,6 +244,16 @@
 
     function clearSelection() {
       document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected'));
+    }
+
+    function highlightMoves(moves) {
+      document.querySelectorAll('.highlight-move').forEach(el => el.remove());
+      moves.forEach(([r, c]) => {
+        const cell = getCell(r, c);
+        const hl = document.createElement('div');
+        hl.className = 'highlight-move';
+        cell.appendChild(hl);
+      });
     }
 
     function updateBoard() {
@@ -251,6 +305,18 @@
       return true;
     }
 
+    function getAllValidMoves(r, c) {
+      const moves = [];
+      for(let tr=0; tr<8; tr++) {
+        for(let tc=0; tc<8; tc++) {
+          if(canMove(boardState[r][c], r, c, tr, tc)) {
+            moves.push([tr, tc]);
+          }
+        }
+      }
+      return moves;
+    }
+
     function isCheckmate(color) {
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -261,11 +327,13 @@
     }
 
     function undoMove() {
+      if (aiThinking) return; // لا تراجع أثناء حركة AI
       if (moveHistory.length > 0) {
         boardState = moveHistory.pop();
         currentTurn = opponent();
         updateBoard();
         turnInfo.textContent = `الدور: ${currentTurn === 'w' ? 'الأبيض' : 'الأسود'}`;
+        startTimer();
       }
     }
 
@@ -274,6 +342,7 @@
     }
 
     function resetGame() {
+      aiThinking = false;
       setupBoard();
       moveHistory = [];
       currentTurn = 'w';
@@ -287,7 +356,9 @@
     function startTimer() {
       clearInterval(timerInterval);
       timerInterval = setInterval(() => {
-        if (currentTurn === 'w') whiteTime--; else blackTime--;
+        if (aiThinking) return; // لا يقلل الوقت أثناء تفكير AI
+        if (currentTurn === 'w') whiteTime--;
+        else blackTime--;
         updateTimers();
         if (whiteTime <= 0 || blackTime <= 0) {
           clearInterval(timerInterval);
@@ -307,8 +378,31 @@
       return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
     }
 
-    setupBoard();
-    startTimer();
-  </script>
-</body>
-</html>
+    // AI سهل: حركة عشوائية من الحركات الممكنة
+    function makeEasyAIMove() {
+      const moves = [];
+      for(let r=0; r<8; r++) {
+        for(let c=0; c<8; c++) {
+          if(boardState[r][c] && boardState[r][c][0] === 'b') {
+            const validMoves = getAllValidMoves(r, c);
+            validMoves.forEach(mv => moves.push({from: [r,c], to: mv}));
+          }
+        }
+      }
+      if(moves.length === 0) return; // لا حركات
+      const move = moves[Math.floor(Math.random() * moves.length)];
+      makeMove(move.from[0], move.from[1], move.to[0], move.to[1]);
+    }
+
+    // AI صعب: حركة حسب تقييم بسيط لقيمة القطع (مينيماكس مبسط)
+    function makeHardAIMove() {
+      const moves = [];
+      for(let r=0; r<8; r++) {
+        for(let c=0; c<8; c++) {
+          if(boardState[r][c] && boardState[r][c][0] === 'b') {
+            const validMoves = getAllValidMoves(r, c);
+            validMoves.forEach(mv => moves.push({from: [r,c], to: mv}));
+          }
+        }
+      }
+      if(moves.length ===
