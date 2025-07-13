@@ -1,36 +1,33 @@
-<!DOCTYPE html>
-<html lang="ar">
+<!DOCTYPE html><html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>شطرنج سوداني - تصميم أحمد جلال ÂĜ</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background: #f0f0f0;
       font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f0f0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
     }
-
     h1 {
-      font-size: 24px;
-      margin-bottom: 20px;
-      text-align: center;
+      margin-top: 20px;
     }
-
+    #turnInfo {
+      margin: 10px;
+      font-weight: bold;
+    }
     .board {
       display: grid;
       grid-template-columns: repeat(8, 60px);
       grid-template-rows: repeat(8, 60px);
       border: 3px solid #333;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
-
     .cell {
       width: 60px;
       height: 60px;
@@ -38,22 +35,11 @@
       align-items: center;
       justify-content: center;
       font-size: 32px;
-      user-select: none;
       cursor: pointer;
     }
-
-    .black {
-      background-color: #769656;
-    }
-
-    .white {
-      background-color: #eeeed2;
-    }
-
-    .selected {
-      outline: 3px solid red;
-    }
-
+    .white { background-color: #eeeed2; }
+    .black { background-color: #769656; }
+    .selected { outline: 3px solid red; }
     footer {
       margin-top: 20px;
       font-size: 14px;
@@ -63,59 +49,142 @@
 </head>
 <body>
   <h1>لعبة الشطرنج - يلا يا زول!</h1>
+  <div id="turnInfo">الدور: الأبيض</div>
   <div class="board" id="chessboard"></div>
-
-  <footer>
-    تصميم أحمد جلال ÂĜ - 2025
-  </footer>
-
-  <script>
+  <footer>تصميم أحمد جلال ÂĜ - 2025</footer>  <script>
     const board = document.getElementById("chessboard");
+    const turnInfo = document.getElementById("turnInfo");
+    const size = 8;
+    const state = [];
+    let currentTurn = 'white';
+    let selected = null;
 
-    const pieces = {
-      white: ['♖','♘','♗','♕','♔','♗','♘','♖'],
-      black: ['♜','♞','♝','♛','♚','♝','♞','♜'],
-      whitePawn: '♙',
-      blackPawn: '♟︎'
+    const pieceUnicode = {
+      'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
+      'bp': '♟︎', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
     };
 
-    let selectedCell = null;
+    function initBoard() {
+      const initial = [
+        ['br','bn','bb','bq','bk','bb','bn','br'],
+        Array(8).fill('bp'),
+        ...Array(4).fill(Array(8).fill('')),
+        Array(8).fill('wp'),
+        ['wr','wn','wb','wq','wk','wb','wn','wr']
+      ];
 
-    for (let row = 0; row < 8; row++) {
-      for (let col = 0; col < 8; col++) {
-        const cell = document.createElement("div");
-        const colorClass = (row + col) % 2 === 0 ? "white" : "black";
-        cell.className = "cell " + colorClass;
-        cell.dataset.row = row;
-        cell.dataset.col = col;
+      for (let row = 0; row < size; row++) {
+        state[row] = [];
+        for (let col = 0; col < size; col++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell', (row + col) % 2 === 0 ? 'white' : 'black');
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          cell.textContent = pieceUnicode[initial[row][col]] || '';
+          state[row][col] = initial[row][col];
 
-        // إضافة القطع
-        if (row === 0) cell.textContent = pieces.black[col];
-        else if (row === 1) cell.textContent = pieces.blackPawn;
-        else if (row === 6) cell.textContent = pieces.whitePawn;
-        else if (row === 7) cell.textContent = pieces.white[col];
-
-        // حدث النقر على الخلية
-        cell.addEventListener("click", () => {
-          // إذا في قطعة محددة مسبقًا
-          if (selectedCell) {
-            if (selectedCell !== cell) {
-              // انقل القطعة
-              cell.textContent = selectedCell.textContent;
-              selectedCell.textContent = "";
-            }
-            selectedCell.classList.remove("selected");
-            selectedCell = null;
-          } else if (cell.textContent !== "") {
-            // حدد القطعة
-            selectedCell = cell;
-            selectedCell.classList.add("selected");
-          }
-        });
-
-        board.appendChild(cell);
+          cell.addEventListener('click', () => handleClick(row, col));
+          board.appendChild(cell);
+        }
       }
     }
-  </script>
-</body>
+
+    function handleClick(row, col) {
+      const clickedPiece = state[row][col];
+      const cell = getCell(row, col);
+
+      if (selected) {
+        const [fromRow, fromCol] = selected;
+        const piece = state[fromRow][fromCol];
+
+        if ((currentTurn === 'white' && piece[0] !== 'w') || (currentTurn === 'black' && piece[0] !== 'b')) {
+          selected = null;
+          clearSelection();
+          return;
+        }
+
+        if (isValidMove(piece, fromRow, fromCol, row, col)) {
+          movePiece(fromRow, fromCol, row, col);
+          selected = null;
+          clearSelection();
+          switchTurn();
+        } else {
+          selected = null;
+          clearSelection();
+        }
+      } else if (clickedPiece && clickedPiece[0] === currentTurn[0]) {
+        selected = [row, col];
+        cell.classList.add('selected');
+      }
+    }
+
+    function getCell(row, col) {
+      return board.children[row * size + col];
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+    }
+
+    function switchTurn() {
+      currentTurn = currentTurn === 'white' ? 'black' : 'white';
+      turnInfo.textContent = `الدور: ${currentTurn === 'white' ? 'الأبيض' : 'الأسود'}`;
+    }
+
+    function movePiece(fromRow, fromCol, toRow, toCol) {
+      state[toRow][toCol] = state[fromRow][fromCol];
+      state[fromRow][fromCol] = '';
+      getCell(toRow, toCol).textContent = pieceUnicode[state[toRow][toCol]];
+      getCell(fromRow, fromCol).textContent = '';
+    }
+
+    function isValidMove(piece, fromR, fromC, toR, toC) {
+      const target = state[toR][toC];
+      if (target && target[0] === piece[0]) return false;
+
+      const dx = toC - fromC;
+      const dy = toR - fromR;
+
+      switch (piece[1]) {
+        case 'p': // Pawn
+          const dir = piece[0] === 'w' ? -1 : 1;
+          const startRow = piece[0] === 'w' ? 6 : 1;
+          if (dx === 0 && !target) {
+            if (dy === dir) return true;
+            if (fromR === startRow && dy === 2 * dir && !state[fromR + dir][fromC]) return true;
+          }
+          if (Math.abs(dx) === 1 && dy === dir && target) return true;
+          return false;
+        case 'r': // Rook
+          if (dx !== 0 && dy !== 0) return false;
+          return clearPath(fromR, fromC, toR, toC);
+        case 'b': // Bishop
+          if (Math.abs(dx) !== Math.abs(dy)) return false;
+          return clearPath(fromR, fromC, toR, toC);
+        case 'q': // Queen
+          if (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) return clearPath(fromR, fromC, toR, toC);
+          return false;
+        case 'k': // King
+          return Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
+        case 'n': // Knight
+          return (Math.abs(dx) === 1 && Math.abs(dy) === 2) || (Math.abs(dx) === 2 && Math.abs(dy) === 1);
+      }
+      return false;
+    }
+
+    function clearPath(fr, fc, tr, tc) {
+      const stepR = Math.sign(tr - fr);
+      const stepC = Math.sign(tc - fc);
+      let r = fr + stepR;
+      let c = fc + stepC;
+      while (r !== tr || c !== tc) {
+        if (state[r][c] !== '') return false;
+        r += stepR;
+        c += stepC;
+      }
+      return true;
+    }
+
+    initBoard();
+  </script></body>
 </html>
