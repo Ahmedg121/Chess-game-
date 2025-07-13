@@ -38,6 +38,7 @@
       align-items: center;
       justify-content: center;
       font-size: 32px;
+      user-select: none;
     }
 
     .black {
@@ -65,12 +66,27 @@
 
   <script>
     const board = document.getElementById("chessboard");
-    const size = 8;
 
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
+    // ترتيب القطع: rook, knight, bishop, queen, king, bishop, knight, rook
+    const pieces = {
+      white: ['♖','♘','♗','♕','♔','♗','♘','♖'],
+      black: ['♜','♞','♝','♛','♚','♝','♞','♜'],
+      whitePawn: '♙',
+      blackPawn: '♟︎'
+    };
+
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
         const cell = document.createElement("div");
-        cell.className = "cell " + ((row + col) % 2 === 0 ? "white" : "black");
+        const colorClass = (row + col) % 2 === 0 ? "white" : "black";
+        cell.className = "cell " + colorClass;
+
+        // وضع القطع
+        if (row === 0) cell.textContent = pieces.black[col];        // الصف الأول أسود
+        else if (row === 1) cell.textContent = pieces.blackPawn;    // جنود سود
+        else if (row === 6) cell.textContent = pieces.whitePawn;    // جنود بيض
+        else if (row === 7) cell.textContent = pieces.white[col];   // الصف الأخير أبيض
+
         board.appendChild(cell);
       }
     }
