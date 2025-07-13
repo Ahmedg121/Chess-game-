@@ -1,279 +1,32 @@
-<!DOCTYPE html><html lang="ar">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>شطرنج سوداني - تصميم أحمد جلال ÂĜ</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');:root {
-  --white: #eeeed2;
-  --black: #769656;
-  --night-white: #444;
-  --night-black: #222;
-  --night-text: #eee;
-  --move-hint: #00f3;
-}
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Cairo', sans-serif;
-  background-color: var(--white);
-  color: #000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
-  transition: all 0.3s ease;
-}
-h1 {
-  margin: 10px 0 5px;
-  font-size: 32px;
-  color: #222;
-}
-#dedication {
-  font-size: 18px;
-  margin-bottom: 5px;
-  color: #555;
-}
-#version {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 15px;
-}
-#turnInfo { margin: 10px; font-weight: bold; }
-.board {
-  display: grid;
-  grid-template-columns: repeat(8, 60px);
-  grid-template-rows: repeat(8, 60px);
-  border: 3px solid #333;
-  margin-bottom: 10px;
-}
-.cell {
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  cursor: pointer;
-  position: relative;
-}
-.white { background-color: var(--white); }
-.black { background-color: var(--black); }
-.night .white { background-color: var(--night-white); }
-.night .black { background-color: var(--night-black); }
-.selected { outline: 3px solid red; }
-.hint::after {
-  content: "";
-  position: absolute;
-  width: 60%;
-  height: 60%;
-  background-color: var(--move-hint);
-  border-radius: 50%;
-  z-index: 1;
-}
-#controls { margin: 10px; display: flex; gap: 10px; }
-button {
-  padding: 5px 12px;
-  font-size: 14px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.night {
-  background-color: #111;
-  color: var(--night-text);
-}
-footer {
-  margin: 20px;
-  font-size: 14px;
-}
-
-  </style>
-</head>
-<body>
-  <h1>من تصميم Ahmed Gallal ÂĜ</h1>
-  <div id="dedication">أول نسخة مهداة إلى حوش المنا</div>
-  <div id="version">إصدار أول - 2025</div>  <div id="turnInfo">الدور: الأبيض</div>
-  <div class="board" id="chessboard"></div>
-  <div id="controls">
-    <button onclick="undoMove()">تراجع</button>
-    <button onclick="toggleNightMode()">الوضع الليلي</button>
-    <button onclick="resetGame()">إعادة</button>
+<!DOCTYPE html>
+<html><head><style>
+  .board {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    width: calc(8*60px);
+    border: 2px solid red;
+    overflow: visible;
+  }
+  .cell {
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    box-sizing: border-box;
+    border: 1px solid black;
+  }
+</style></head><body>
+  <div class="board">
   </div>
-  <footer>تصميم أحمد جلال ÂĜ - 2025</footer>  <script>
-    const board = document.getElementById("chessboard");
-    const turnInfo = document.getElementById("turnInfo");
-    const pieceIcons = {
-      'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
-      'bp': '♟︎', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
-    };
-    let boardState = [];
-    let selected = null;
-    let currentTurn = 'w';
-    let moveHistory = [];
-    let possibleMoves = [];
-
-    function setupBoard() {
-      const layout = [
-        ['br','bn','bb','bq','bk','bb','bn','br'],
-        Array(8).fill('bp'),
-        ...Array(4).fill(Array(8).fill('')),
-        Array(8).fill('wp'),
-        ['wr','wn','wb','wq','wk','wb','wn','wr']
-      ];
-      board.innerHTML = '';
-      boardState = layout.map(row => [...row]);
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell ' + ((r + c) % 2 === 0 ? 'white' : 'black');
-          cell.dataset.row = r;
-          cell.dataset.col = c;
-          cell.textContent = pieceIcons[layout[r][c]] || '';
-          cell.onclick = () => onCellClick(r, c);
-          board.appendChild(cell);
-        }
+  <script>
+    const b = document.querySelector('.board');
+    for(let r=0;r<8;r++){
+      for(let c=0;c<8;c++){
+        let div = document.createElement('div');
+        div.className='cell';
+        div.textContent = `${r},${c}`;
+        b.appendChild(div);
       }
     }
-
-    function onCellClick(r, c) {
-      const piece = boardState[r][c];
-      const cell = getCell(r, c);
-
-      if (selected) {
-        const [fromR, fromC] = selected;
-        const selectedPiece = boardState[fromR][fromC];
-        if (canMove(selectedPiece, fromR, fromC, r, c)) {
-          moveHistory.push(JSON.parse(JSON.stringify(boardState)));
-          boardState[r][c] = boardState[fromR][fromC];
-          boardState[fromR][fromC] = '';
-
-          if (boardState[r][c][1] === 'p' && (r === 0 || r === 7)) {
-            boardState[r][c] = currentTurn + 'q';
-          }
-
-          updateBoard();
-          if (isCheckmate(opponent())) {
-            setTimeout(() => alert('ابلع يا زول! كش مات!'), 200);
-          }
-          currentTurn = opponent();
-          turnInfo.textContent = `الدور: ${currentTurn === 'w' ? 'الأبيض' : 'الأسود'}`;
-        }
-        clearSelection();
-        selected = null;
-      } else if (piece && piece[0] === currentTurn) {
-        clearSelection();
-        selected = [r, c];
-        cell.classList.add('selected');
-        showHints(r, c);
-      }
-    }
-
-    function showHints(r, c) {
-      possibleMoves = [];
-      const piece = boardState[r][c];
-      for (let tr = 0; tr < 8; tr++) {
-        for (let tc = 0; tc < 8; tc++) {
-          if (canMove(piece, r, c, tr, tc)) {
-            const hintCell = getCell(tr, tc);
-            hintCell.classList.add('hint');
-            possibleMoves.push(hintCell);
-          }
-        }
-      }
-    }
-
-    function clearSelection() {
-      document.querySelectorAll('.cell').forEach(c => {
-        c.classList.remove('selected');
-        c.classList.remove('hint');
-      });
-      possibleMoves = [];
-    }
-
-    function getCell(r, c) {
-      return board.children[r * 8 + c];
-    }
-
-    function updateBoard() {
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          getCell(r, c).textContent = pieceIcons[boardState[r][c]] || '';
-        }
-      }
-    }
-
-    function opponent() {
-      return currentTurn === 'w' ? 'b' : 'w';
-    }
-
-    function canMove(piece, fr, fc, tr, tc) {
-      const target = boardState[tr][tc];
-      if (target && target[0] === piece[0]) return false;
-      const dr = tr - fr;
-      const dc = tc - fc;
-      const absR = Math.abs(dr);
-      const absC = Math.abs(dc);
-
-      switch (piece[1]) {
-        case 'p': {
-          const dir = piece[0] === 'w' ? -1 : 1;
-          if (dc === 0 && !target) {
-            if (dr === dir || (fr === (piece[0] === 'w' ? 6 : 1) && dr === 2 * dir && !boardState[fr + dir][fc])) return true;
-          } else if (absC === 1 && dr === dir && target) return true;
-          return false;
-        }
-        case 'r': return (dr === 0 || dc === 0) && clear(fr, fc, tr, tc);
-        case 'b': return absR === absC && clear(fr, fc, tr, tc);
-        case 'q': return (dr === 0 || dc === 0 || absR === absC) && clear(fr, fc, tr, tc);
-        case 'k': return absR <= 1 && absC <= 1;
-        case 'n': return (absR === 2 && absC === 1) || (absR === 1 && absC === 2);
-      }
-      return false;
-    }
-
-    function clear(fr, fc, tr, tc) {
-      const stepR = Math.sign(tr - fr);
-      const stepC = Math.sign(tc - fc);
-      let r = fr + stepR, c = fc + stepC;
-      while (r !== tr || c !== tc) {
-        if (boardState[r][c]) return false;
-        r += stepR;
-        c += stepC;
-      }
-      return true;
-    }
-
-    function isCheckmate(color) {
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          if (boardState[r][c] === color + 'k') return false;
-        }
-      }
-      return true;
-    }
-
-    function undoMove() {
-      if (moveHistory.length > 0) {
-        boardState = moveHistory.pop();
-        currentTurn = opponent();
-        updateBoard();
-        turnInfo.textContent = `الدور: ${currentTurn === 'w' ? 'الأبيض' : 'الأسود'}`;
-      }
-    }
-
-    function toggleNightMode() {
-      document.body.classList.toggle('night');
-    }
-
-    function resetGame() {
-      setupBoard();
-      moveHistory = [];
-      currentTurn = 'w';
-      turnInfo.textContent = `الدور: الأبيض`;
-    }
-
-    setupBoard();
-  </script></body>
-</html>
+  </script>
+</body></html>
