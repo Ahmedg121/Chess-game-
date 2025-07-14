@@ -1,278 +1,527 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sudanese Chess - Designed by Ahmed Gallal ÂĜ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet" />
+  <title>شطرنج سوداني - تصميم أحمد جلال ÂĜ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     :root {
-      --white: #eeeed2; --black: #769656; --night-white: #444;
-      --night-black: #222; --night-text: #eee;
-      --hint-color: rgba(0, 0, 255, 0.3);
+      --light-square: #f0d9b5;
+      --dark-square: #b58863;
+      --selected: #ffcc00;
+      --hint: rgba(0, 255, 0, 0.3);
       --capture-hint: rgba(255, 0, 0, 0.4);
+      --check: rgba(255, 0, 0, 0.7);
+      --night-bg: #1a1a1a;
+      --night-text: #f0f0f0;
     }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
     body {
-      margin: 0; padding: 0;
       font-family: 'Cairo', sans-serif;
-      background-color: var(--white);
-      color: #000;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-start;
+      background: linear-gradient(135deg, #8e9eab, #eef2f3);
+      color: #333;
       min-height: 100vh;
-      transition: all 0.3s ease;
-      background-image: linear-gradient(135deg, #f5f7fa 0%, #e4e7f0 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      transition: background 0.5s ease;
     }
+    
+    body.night-mode {
+      background: linear-gradient(135deg, #232526, #414345);
+      color: var(--night-text);
+    }
+    
     .header {
       text-align: center;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 10px;
-      margin: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 95%;
-      max-width: 600px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      border: 2px solid #b58863;
     }
-    h1 { 
-      margin: 10px 0 5px; 
-      font-size: 32px; 
-      color: #222; 
+    
+    body.night-mode .header {
+      background: rgba(30, 30, 30, 0.9);
+      border-color: #8d6e63;
+    }
+    
+    h1 {
+      color: #5d4037;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
-    #dedication { 
-      font-size: 18px; 
-      margin-bottom: 5px; 
-      color: #555; 
-      font-weight: bold;
+    
+    body.night-mode h1 {
+      color: #d7ccc8;
     }
-    #version { 
-      font-size: 14px; 
-      color: #888; 
-      margin-bottom: 10px; 
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: #795548;
+      margin-bottom: 15px;
     }
-    #turnInfo { 
-      margin: 5px; 
-      font-weight: bold; 
-      font-size: 20px;
-      padding: 8px 15px;
-      border-radius: 20px;
-      background: #f0f0f0;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    
+    body.night-mode .subtitle {
+      color: #bcaaa4;
     }
-    #timers {
-      font-size: 16px; 
-      margin-bottom: 10px; 
-      color: #333;
+    
+    .game-container {
       display: flex;
-      gap: 20px;
+      flex-wrap: wrap;
       justify-content: center;
+      gap: 20px;
       width: 100%;
+      max-width: 1200px;
     }
-    .timer {
-      padding: 8px 15px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.7);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      min-width: 120px;
-      text-align: center;
+    
+    .board-section {
+      flex: 1;
+      min-width: 500px;
     }
-    select { 
-      margin: 10px; 
-      padding: 8px 12px; 
-      font-size: 16px; 
-      border-radius: 8px;
-      border: 2px solid #769656;
-      background: white;
-      font-weight: bold;
-      cursor: pointer;
+    
+    .info-section {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
+    
     .board-container {
+      background: #7b5544;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       position: relative;
-      margin: 10px 0 20px;
-      padding: 15px;
-      background: #d4d4d4;
-      border-radius: 15px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     }
+    
     .board {
       display: grid;
-      grid-template-columns: repeat(8, 60px);
-      grid-template-rows: repeat(8, 60px);
-      border: 4px solid #5a4d41;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      grid-template-columns: repeat(8, 65px);
+      grid-template-rows: repeat(8, 65px);
+      border: 4px solid #5d4037;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
     }
+    
     .cell {
-      width: 60px; height: 60px;
-      display: flex; align-items: center;
+      display: flex;
+      align-items: center;
       justify-content: center;
-      font-size: 40px;
+      font-size: 45px;
       cursor: pointer;
       position: relative;
       user-select: none;
       transition: all 0.2s ease;
     }
-    .white { background-color: var(--white); }
-    .black { background-color: var(--black); }
-    .night .white { background-color: var(--night-white); }
-    .night .black { background-color: var(--night-black); }
-    .selected { 
-      outline: 3px solid red;
+    
+    .light {
+      background-color: var(--light-square);
+    }
+    
+    .dark {
+      background-color: var(--dark-square);
+    }
+    
+    body.night-mode .light {
+      background-color: #8d6e63;
+    }
+    
+    body.night-mode .dark {
+      background-color: #5d4037;
+    }
+    
+    .selected {
+      background-color: var(--selected);
       transform: scale(0.95);
       z-index: 10;
     }
+    
     .hint {
-      background-color: var(--hint-color);
       position: absolute;
-      top: 10px; left: 10px; right: 10px; bottom: 10px;
+      width: 25px;
+      height: 25px;
+      background-color: var(--hint);
       border-radius: 50%;
       pointer-events: none;
       z-index: 1;
     }
+    
     .capture-hint {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%;
+      height: 100%;
       border: 4px solid var(--capture-hint);
       border-radius: 50%;
       pointer-events: none;
       z-index: 2;
     }
-    #controls {
-      margin: 10px;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      justify-content: center;
-      width: 100%;
-      max-width: 500px;
+    
+    .check {
+      background-color: var(--check) !important;
     }
-    button {
+    
+    .notation {
+      position: absolute;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: bold;
+      z-index: 3;
+    }
+    
+    .file-notation {
+      bottom: -25px;
+    }
+    
+    .rank-notation {
+      left: -25px;
+    }
+    
+    .game-info {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      border: 2px solid #b58863;
+    }
+    
+    body.night-mode .game-info {
+      background: rgba(30, 30, 30, 0.9);
+      border-color: #8d6e63;
+    }
+    
+    .status-card {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .turn-indicator {
+      font-size: 1.8rem;
+      font-weight: bold;
       padding: 10px 20px;
-      font-size: 16px;
+      border-radius: 10px;
+      background: #e0e0e0;
+      display: inline-block;
+      margin-bottom: 15px;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+    }
+    
+    .white-turn {
+      background: linear-gradient(to right, #f5f5f5, #e0e0e0);
+      color: #333;
+    }
+    
+    .black-turn {
+      background: linear-gradient(to right, #333, #000);
+      color: #fff;
+    }
+    
+    .timer {
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: #5d4037;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .game-status {
+      font-size: 1.4rem;
+      font-weight: bold;
+      padding: 15px;
+      border-radius: 10px;
+      background: #f44336;
+      color: white;
+      text-align: center;
+      display: none;
+    }
+    
+    .check-status {
+      background: #ff9800;
+    }
+    
+    .checkmate-status {
+      background: #f44336;
+    }
+    
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      padding: 12px 15px;
+      font-size: 1.1rem;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      user-select: none;
       font-weight: bold;
-      transition: all 0.2s;
-      box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-      background: #769656;
-      color: white;
-      min-width: 120px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 8px rgba(0,0,0,0.3);
+    
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 8px rgba(0,0,0,0.15);
     }
-    button:active {
+    
+    .btn:active {
       transform: translateY(1px);
     }
-    #undoBtn { background: #d4af37; }
-    #nightBtn { background: #2c3e50; }
-    #resetBtn { background: #c94c4c; }
-    .night { background-color: #111; color: var(--night-text); }
-    footer { 
-      margin: 20px; 
-      font-size: 16px; 
-      text-align: center;
-      color: #555;
+    
+    .btn-undo {
+      background: linear-gradient(to right, #2196F3, #21CBF3);
+      color: white;
     }
-    .notation {
-      position: absolute;
-      font-size: 12px;
-      color: rgba(0,0,0,0.7);
+    
+    .btn-night {
+      background: linear-gradient(to right, #37474F, #263238);
+      color: white;
     }
-    .file-notation {
-      bottom: -20px;
-      left: 50%;
-      transform: translateX(-50%);
+    
+    .btn-reset {
+      background: linear-gradient(to right, #f44336, #ff9800);
+      color: white;
     }
-    .rank-notation {
-      right: -20px;
-      top: 50%;
-      transform: translateY(-50%);
+    
+    .btn-mode {
+      background: linear-gradient(to right, #4CAF50, #8BC34A);
+      color: white;
     }
-    .game-info {
-      margin-top: 10px;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 10px;
-      width: 95%;
-      max-width: 600px;
-      text-align: center;
+    
+    .mode-selector {
+      margin: 15px 0;
     }
-    .status {
+    
+    select {
+      width: 100%;
+      padding: 12px 15px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      border: 2px solid #b58863;
+      background: #fff;
       font-weight: bold;
-      font-size: 18px;
-      color: #c94c4c;
-      margin: 5px 0;
+      cursor: pointer;
     }
-    @media (max-width: 600px) {
+    
+    body.night-mode select {
+      background: #333;
+      color: #fff;
+      border-color: #8d6e63;
+    }
+    
+    .rules {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      border: 2px solid #b58863;
+      margin-top: 20px;
+    }
+    
+    body.night-mode .rules {
+      background: rgba(30, 30, 30, 0.9);
+      border-color: #8d6e63;
+    }
+    
+    .rules h3 {
+      color: #5d4037;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    
+    body.night-mode .rules h3 {
+      color: #d7ccc8;
+    }
+    
+    .rules ul {
+      padding-left: 20px;
+    }
+    
+    .rules li {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #5d4037;
+      font-size: 1.1rem;
+      padding: 15px;
+    }
+    
+    body.night-mode .footer {
+      color: #d7ccc8;
+    }
+    
+    @media (max-width: 900px) {
+      .game-container {
+        flex-direction: column;
+      }
+      
+      .board-section, .info-section {
+        min-width: 100%;
+      }
+      
       .board {
-        grid-template-columns: repeat(8, 45px);
-        grid-template-rows: repeat(8, 45px);
+        grid-template-columns: repeat(8, 11vw);
+        grid-template-rows: repeat(8, 11vw);
       }
+      
       .cell {
-        width: 45px; 
-        height: 45px;
-        font-size: 30px;
+        font-size: 8vw;
       }
-      h1 { font-size: 24px; }
-      #dedication { font-size: 16px; }
-      button { padding: 8px 15px; font-size: 14px; min-width: 100px; }
+    }
+    
+    @media (max-width: 600px) {
+      .header {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .subtitle {
+        font-size: 1rem;
+      }
+      
+      .board-container {
+        padding: 15px;
+      }
+      
+      .controls {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>♞ Sudanese Chess ♞</h1>
-    <div id="dedication">Designed by Ahmed Gallal ÂĜ</div>
-    <div id="version">First version dedicated to Hosh Almuna | Version 1 - 2025</div>
+    <h1><i class="fas fa-chess"></i> شطرنج سوداني</h1>
+    <div class="subtitle">تصميم: أحمد جلال ÂĜ | الإهداء الأول: هش المنى</div>
+    <div class="subtitle">الإصدار 2.0 - 2025</div>
   </div>
-
-  <div id="turnInfo">Turn: White</div>
   
-  <div id="timers">
-    <div class="timer">⏱️ White: <span id="whiteTimer">05:00</span></div>
-    <div class="timer">⏱️ Black: <span id="blackTimer">05:00</span></div>
+  <div class="game-container">
+    <div class="board-section">
+      <div class="board-container">
+        <div class="board" id="chessboard"></div>
+      </div>
+    </div>
+    
+    <div class="info-section">
+      <div class="game-info">
+        <div class="status-card">
+          <div id="turnIndicator" class="turn-indicator white-turn">
+            <i class="fas fa-chess-king"></i> دور الأبيض
+          </div>
+          
+          <div class="timer">
+            <i class="fas fa-clock"></i> الأبيض: <span id="whiteTimer">05:00</span>
+          </div>
+          <div class="timer">
+            <i class="fas fa-clock"></i> الأسود: <span id="blackTimer">05:00</span>
+          </div>
+          
+          <div id="gameStatus" class="game-status"></div>
+        </div>
+        
+        <div class="mode-selector">
+          <select id="gameMode">
+            <option value="human">🧑 لاعب ضد لاعب</option>
+            <option value="ai-easy">🤖 كمبيوتر (سهل)</option>
+            <option value="ai-hard">🧠 كمبيوتر (صعب)</option>
+          </select>
+        </div>
+        
+        <div class="controls">
+          <button class="btn btn-undo" onclick="undoMove()">
+            <i class="fas fa-undo"></i> تراجع
+          </button>
+          <button class="btn btn-night" onclick="toggleNightMode()">
+            <i class="fas fa-moon"></i> وضع الليل
+          </button>
+          <button class="btn btn-reset" onclick="resetGame()">
+            <i class="fas fa-redo"></i> إعادة اللعبة
+          </button>
+          <button class="btn btn-mode" onclick="toggleGameMode()">
+            <i class="fas fa-exchange-alt"></i> تبديل الدور
+          </button>
+        </div>
+      </div>
+      
+      <div class="rules">
+        <h3><i class="fas fa-book"></i> قواعد الشطرنج السوداني</h3>
+        <ul>
+          <li>الحركات مثل الشطرنج الدولي مع بعض الاختلافات المحلية</li>
+          <li>الملك لا يمكن أن يتحرك إلى موقف يكون فيه مهدداً</li>
+          <li>عندما يكون الملك مهدداً، يجب على اللاعب حمايته</li>
+          <li>اللعبة تنتهي عند كش ملك (عندما لا يمكن حماية الملك)</li>
+          <li>التبييت مسموح به في ظل شروط محددة</li>
+          <li>الترقية: عند وصول البيدق إلى الطرف الآخر يصبح ملكة</li>
+        </ul>
+      </div>
+    </div>
   </div>
-
-  <select id="gameMode">
-    <option value="human">🧑 Play with Person</option>
-    <option value="ai-easy">🤖 AI (Easy)</option>
-    <option value="ai-hard">🧠 AI (Hard)</option>
-  </select>
-
-  <div class="board-container">
-    <div class="board" id="chessboard"></div>
+  
+  <div class="footer">
+    صنع بكل ❤️ بواسطة أحمد جلال ÂĜ | الشطرنج السوداني © 2025
   </div>
-
-  <div class="game-info">
-    <div id="gameStatus" class="status"></div>
-  </div>
-
-  <div id="controls">
-    <button id="undoBtn" onclick="undoMove()">Undo Move</button>
-    <button id="nightBtn" onclick="toggleNightMode()">Night Mode</button>
-    <button id="resetBtn" onclick="resetGame()">Reset Game</button>
-  </div>
-
-  <footer>Made with ❤️ by Ahmed Gallal ÂĜ | Sudanese Chess © 2025</footer>
 
   <script>
     // Initialize game variables
     const board = document.getElementById("chessboard");
-    const turnInfo = document.getElementById("turnInfo");
+    const turnIndicator = document.getElementById("turnIndicator");
     const gameModeSelect = document.getElementById("gameMode");
     const whiteTimerEl = document.getElementById("whiteTimer");
     const blackTimerEl = document.getElementById("blackTimer");
-    const gameStatus = document.getElementById("gameStatus");
+    const gameStatusEl = document.getElementById("gameStatus");
 
     const pieceIcons = {
       'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
       'bp': '♟︎', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
     };
 
-    let boardState = [];
+    // Initial board setup
+    const initialBoard = [
+      ['br','bn','bb','bq','bk','bb','bn','br'],
+      ['bp','bp','bp','bp','bp','bp','bp','bp'],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['wp','wp','wp','wp','wp','wp','wp','wp'],
+      ['wr','wn','wb','wq','wk','wb','wn','wr']
+    ];
+    
+    let boardState = JSON.parse(JSON.stringify(initialBoard));
     let selected = null;
     let currentTurn = 'w';
     let moveHistory = [];
@@ -280,6 +529,7 @@
     let timerInterval;
     let aiThinking = false;
     let gameActive = true;
+    let kingPositions = { w: [7, 4], b: [0, 4] };
     
     // Files and ranks for notation
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -288,64 +538,49 @@
     // Initialize the game
     function initGame() {
       setupBoard();
-      setupNotation();
-      resetGame();
+      resetTimers();
+      updateTurnIndicator();
+      gameStatusEl.style.display = 'none';
     }
 
     // Set up the chess board
     function setupBoard() {
-      const layout = [
-        ['br','bn','bb','bq','bk','bb','bn','br'],
-        Array(8).fill('bp'),
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        Array(8).fill('wp'),
-        ['wr','wn','wb','wq','wk','wb','wn','wr']
-      ];
-      
       board.innerHTML = '';
-      boardState = layout.map(row => [...row]);
       
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           const cell = document.createElement('div');
-          cell.className = 'cell ' + ((r + c) % 2 === 0 ? 'white' : 'black');
+          cell.className = `cell ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
           cell.dataset.row = r;
           cell.dataset.col = c;
           
-          if (layout[r][c]) {
-            cell.textContent = pieceIcons[layout[r][c]];
+          if (boardState[r][c]) {
+            cell.textContent = pieceIcons[boardState[r][c]];
           }
           
           cell.onclick = () => onCellClick(r, c);
           board.appendChild(cell);
+          
+          // Add notation to the first row and column
+          if (r === 7) {
+            const fileNotation = document.createElement('div');
+            fileNotation.className = 'notation file-notation';
+            fileNotation.textContent = files[c];
+            fileNotation.style.left = `${c * 65 + 32}px`;
+            boardContainer.appendChild(fileNotation);
+          }
+          
+          if (c === 0) {
+            const rankNotation = document.createElement('div');
+            rankNotation.className = 'notation rank-notation';
+            rankNotation.textContent = ranks[r];
+            rankNotation.style.top = `${r * 65 + 32}px`;
+            boardContainer.appendChild(rankNotation);
+          }
         }
       }
     }
     
-    // Add chess notation to the board
-    function setupNotation() {
-      // File notations (a-h)
-      for (let c = 0; c < 8; c++) {
-        const notation = document.createElement('div');
-        notation.className = 'notation file-notation';
-        notation.textContent = files[c];
-        notation.style.left = `${(c * 60) + 30}px`;
-        board.parentElement.appendChild(notation);
-      }
-      
-      // Rank notations (1-8)
-      for (let r = 0; r < 8; r++) {
-        const notation = document.createElement('div');
-        notation.className = 'notation rank-notation';
-        notation.textContent = ranks[r];
-        notation.style.top = `${(r * 60) + 30}px`;
-        board.parentElement.appendChild(notation);
-      }
-    }
-
     // Handle cell clicks
     function onCellClick(r, c) {
       if (!gameActive || aiThinking) return;
@@ -359,7 +594,7 @@
         const selectedPiece = boardState[fromR][fromC];
         
         // Check if the move is valid
-        if (canMove(selectedPiece, fromR, fromC, r, c)) {
+        if (isValidMove(selectedPiece, fromR, fromC, r, c)) {
           makeMove(fromR, fromC, r, c);
           return;
         }
@@ -389,12 +624,18 @@
         from: [fromR, fromC],
         to: [toR, toC],
         piece: selectedPiece,
-        captured: targetPiece
+        captured: targetPiece,
+        kingPos: {...kingPositions}
       });
       
       // Move the piece
       boardState[toR][toC] = selectedPiece;
       boardState[fromR][fromC] = '';
+      
+      // Update king position if king was moved
+      if (selectedPiece[1] === 'k') {
+        kingPositions[selectedPiece[0]] = [toR, toC];
+      }
       
       // Pawn promotion
       if (selectedPiece[1] === 'p' && (toR === 0 || toR === 7)) {
@@ -404,16 +645,28 @@
       // Update the board display
       updateBoard();
       
-      // Check for game end conditions
-      if (isCheckmate(opponent())) {
-        gameStatus.textContent = `Checkmate! ${currentTurn === 'w' ? 'White' : 'Black'} wins!`;
+      // Check if the opponent is in check
+      const opponentColor = currentTurn === 'w' ? 'b' : 'w';
+      const inCheck = isKingInCheck(opponentColor);
+      
+      // Check for checkmate or stalemate
+      if (inCheck && isCheckmate(opponentColor)) {
+        gameStatusEl.textContent = `كش ملك! ${currentTurn === 'w' ? 'الأبيض' : 'الأسود'} يفوز!`;
+        gameStatusEl.className = 'game-status checkmate-status';
+        gameStatusEl.style.display = 'block';
         gameActive = false;
         clearInterval(timerInterval);
+      } else if (inCheck) {
+        gameStatusEl.textContent = `${opponentColor === 'w' ? 'الأبيض' : 'الأسود'} في حالة كش!`;
+        gameStatusEl.className = 'game-status check-status';
+        gameStatusEl.style.display = 'block';
+      } else {
+        gameStatusEl.style.display = 'none';
       }
       
       // Switch turns
-      currentTurn = opponent();
-      turnInfo.textContent = `Turn: ${currentTurn === 'w' ? 'White' : 'Black'}`;
+      currentTurn = opponentColor;
+      updateTurnIndicator();
       
       // Start timer for the next player
       startTimer();
@@ -459,7 +712,7 @@
       
       for (let toR = 0; toR < 8; toR++) {
         for (let toC = 0; toC < 8; toC++) {
-          if (canMove(piece, r, c, toR, toC)) {
+          if (isValidMove(piece, r, c, toR, toC)) {
             const cell = getCell(toR, toC);
             const hint = document.createElement('div');
             
@@ -476,7 +729,7 @@
     }
     
     // Check if a move is valid
-    function canMove(piece, fromR, fromC, toR, toC) {
+    function isValidMove(piece, fromR, fromC, toR, toC) {
       if (!piece) return false;
       
       const pieceType = piece[1];
@@ -534,6 +787,83 @@
       return false;
     }
     
+    // Check if the king is in check
+    function isKingInCheck(color) {
+      const [kingR, kingC] = kingPositions[color];
+      const opponentColor = color === 'w' ? 'b' : 'w';
+      
+      // Check all opponent pieces to see if they can attack the king
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const piece = boardState[r][c];
+          if (piece && piece[0] === opponentColor) {
+            if (isValidMove(piece, r, c, kingR, kingC)) {
+              // Highlight king's square
+              const kingCell = getCell(kingR, kingC);
+              kingCell.classList.add('check');
+              return true;
+            }
+          }
+        }
+      }
+      
+      // Remove check highlight if not in check
+      const kingCell = document.querySelector('.check');
+      if (kingCell) kingCell.classList.remove('check');
+      return false;
+    }
+    
+    // Check for checkmate
+    function isCheckmate(color) {
+      // First, king must be in check
+      if (!isKingInCheck(color)) return false;
+      
+      // Try every possible move for the color to see if any move gets out of check
+      for (let fromR = 0; fromR < 8; fromR++) {
+        for (let fromC = 0; fromC < 8; fromC++) {
+          const piece = boardState[fromR][fromC];
+          if (piece && piece[0] === color) {
+            for (let toR = 0; toR < 8; toR++) {
+              for (let toC = 0; toC < 8; toC++) {
+                if (isValidMove(piece, fromR, fromC, toR, toC)) {
+                  // Simulate the move
+                  const originalPiece = boardState[toR][toC];
+                  const originalFrom = boardState[fromR][fromC];
+                  boardState[toR][toC] = piece;
+                  boardState[fromR][fromC] = '';
+                  
+                  // Temporarily update king position if king was moved
+                  let originalKingPos;
+                  if (piece[1] === 'k') {
+                    originalKingPos = kingPositions[color];
+                    kingPositions[color] = [toR, toC];
+                  }
+                  
+                  // Check if king is still in check after the move
+                  const stillInCheck = isKingInCheck(color);
+                  
+                  // Undo the move
+                  boardState[fromR][fromC] = originalFrom;
+                  boardState[toR][toC] = originalPiece;
+                  if (piece[1] === 'k') {
+                    kingPositions[color] = originalKingPos;
+                  }
+                  
+                  // If there's a move that gets out of check, it's not checkmate
+                  if (!stillInCheck) {
+                    return false;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // No legal moves found -> checkmate
+      return true;
+    }
+    
     // Check if the path between two positions is clear
     function isPathClear(fromR, fromC, toR, toC) {
       const dr = toR - fromR;
@@ -553,19 +883,40 @@
       return true;
     }
     
-    // Get the opponent's color
-    function opponent() {
-      return currentTurn === 'w' ? 'b' : 'w';
-    }
-    
     // Update the board display
     function updateBoard() {
+      // Remove check highlight
+      const checkCell = document.querySelector('.check');
+      if (checkCell) checkCell.classList.remove('check');
+      
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           const cell = getCell(r, c);
           cell.textContent = boardState[r][c] ? pieceIcons[boardState[r][c]] : '';
         }
       }
+      
+      // Highlight king if in check
+      isKingInCheck(currentTurn === 'w' ? 'b' : 'w');
+    }
+    
+    // Update turn indicator
+    function updateTurnIndicator() {
+      if (currentTurn === 'w') {
+        turnIndicator.textContent = '🧠 دور الأبيض';
+        turnIndicator.className = 'turn-indicator white-turn';
+      } else {
+        turnIndicator.textContent = '🧠 دور الأسود';
+        turnIndicator.className = 'turn-indicator black-turn';
+      }
+    }
+    
+    // Reset timers
+    function resetTimers() {
+      whiteTime = 300;
+      blackTime = 300;
+      whiteTimerEl.textContent = formatTime(whiteTime);
+      blackTimerEl.textContent = formatTime(blackTime);
     }
     
     // Start the timer for the current player
@@ -577,7 +928,9 @@
           whiteTimerEl.textContent = formatTime(whiteTime);
           if (whiteTime <= 0) {
             clearInterval(timerInterval);
-            gameStatus.textContent = "Time's up! Black wins!";
+            gameStatusEl.textContent = "انتهى الوقت! الأسود يفوز!";
+            gameStatusEl.className = 'game-status checkmate-status';
+            gameStatusEl.style.display = 'block';
             gameActive = false;
           }
         } else {
@@ -585,7 +938,9 @@
           blackTimerEl.textContent = formatTime(blackTime);
           if (blackTime <= 0) {
             clearInterval(timerInterval);
-            gameStatus.textContent = "Time's up! White wins!";
+            gameStatusEl.textContent = "انتهى الوقت! الأبيض يفوز!";
+            gameStatusEl.className = 'game-status checkmate-status';
+            gameStatusEl.style.display = 'block';
             gameActive = false;
           }
         }
@@ -605,49 +960,50 @@
       
       const lastMove = moveHistory.pop();
       boardState = lastMove.board;
+      kingPositions = lastMove.kingPos;
+      
+      // Switch turns back
       currentTurn = currentTurn === 'w' ? 'b' : 'w';
       
       updateBoard();
       clearSelection();
-      turnInfo.textContent = `Turn: ${currentTurn === 'w' ? 'White' : 'Black'}`;
-      gameStatus.textContent = '';
+      updateTurnIndicator();
+      gameStatusEl.style.display = 'none';
       gameActive = true;
       
       // Reset timers to previous state
-      whiteTime = 300;
-      blackTime = 300;
-      whiteTimerEl.textContent = formatTime(whiteTime);
-      blackTimerEl.textContent = formatTime(blackTime);
+      resetTimers();
       startTimer();
     }
     
     // Toggle night mode
     function toggleNightMode() {
-      document.body.classList.toggle('night');
+      document.body.classList.toggle('night-mode');
     }
     
     // Reset the game
     function resetGame() {
       clearInterval(timerInterval);
-      whiteTime = 300;
-      blackTime = 300;
-      whiteTimerEl.textContent = formatTime(whiteTime);
-      blackTimerEl.textContent = formatTime(blackTime);
+      boardState = JSON.parse(JSON.stringify(initialBoard));
+      kingPositions = { w: [7, 4], b: [0, 4] };
       currentTurn = 'w';
       moveHistory = [];
       clearSelection();
-      gameStatus.textContent = '';
-      turnInfo.textContent = 'Turn: White';
+      gameStatusEl.style.display = 'none';
       gameActive = true;
       
-      setupBoard();
+      resetTimers();
+      updateBoard();
+      updateTurnIndicator();
+      startTimer();
     }
     
-    // Check for checkmate
-    function isCheckmate(color) {
-      // Simplified checkmate logic
-      // In a real implementation, this would check if the king is in check and has no legal moves
-      return false;
+    // Toggle game mode
+    function toggleGameMode() {
+      const currentMode = gameModeSelect.value;
+      const modes = ['human', 'ai-easy', 'ai-hard'];
+      const nextMode = modes[(modes.indexOf(currentMode) + 1) % modes.length];
+      gameModeSelect.value = nextMode;
     }
     
     // AI makes a move
@@ -664,7 +1020,7 @@
           if (piece && piece[0] === 'b') {
             for (let toR = 0; toR < 8; toR++) {
               for (let toC = 0; toC < 8; toC++) {
-                if (canMove(piece, fromR, fromC, toR, toC)) {
+                if (isValidMove(piece, fromR, fromC, toR, toC)) {
                   moves.push({fromR, fromC, toR, toC});
                 }
               }
