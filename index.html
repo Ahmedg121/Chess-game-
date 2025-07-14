@@ -1,58 +1,33 @@
-<!DOCTYPE html><html lang="ar">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>شطرنج سوداني - تصميم أحمد جلال ÂĜ</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sudanese Chess - Designed by Ahmed Gallal ÂĜ</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --white: #eeeed2;
-      --black: #769656;
-      --night-white: #444;
-      --night-black: #222;
-      --night-text: #eee;
+      --white: #eeeed2; --black: #769656; --night-white: #444;
+      --night-black: #222; --night-text: #eee;
       --hint-color: rgba(0, 0, 255, 0.3);
     }
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       font-family: 'Cairo', sans-serif;
       background-color: var(--white);
       color: #000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
       min-height: 100vh;
       transition: all 0.3s ease;
     }
-    h1 {
-      margin: 10px 0 5px;
-      font-size: 32px;
-      color: #222;
-    }
-    #dedication {
-      font-size: 18px;
-      margin-bottom: 5px;
-      color: #555;
-    }
-    #version {
-      font-size: 14px;
-      color: #888;
-      margin-bottom: 10px;
-    }
+    h1 { margin: 10px 0 5px; font-size: 32px; color: #222; }
+    #dedication { font-size: 18px; margin-bottom: 5px; color: #555; }
+    #version { font-size: 14px; color: #888; margin-bottom: 10px; }
     #turnInfo { margin: 5px; font-weight: bold; }
     #timers {
-      font-size: 14px;
-      margin-bottom: 5px;
-      color: #333;
-      direction: rtl;
+      font-size: 14px; margin-bottom: 5px; color: #333;
     }
-    select {
-      margin: 5px;
-      padding: 4px;
-      font-size: 14px;
-    }
+    select { margin: 5px; padding: 4px; font-size: 14px; }
     .board {
       display: grid;
       grid-template-columns: repeat(8, 60px);
@@ -61,22 +36,32 @@
       margin-bottom: 10px;
     }
     .cell {
-      width: 60px;
-      height: 60px;
-      display: flex;
-      align-items: center;
+      width: 60px; height: 60px;
+      display: flex; align-items: center;
       justify-content: center;
       font-size: 32px;
       cursor: pointer;
+      position: relative;
     }
     .white { background-color: var(--white); }
     .black { background-color: var(--black); }
     .night .white { background-color: var(--night-white); }
     .night .black { background-color: var(--night-black); }
-    .night .hint { background-color: rgba(0, 150, 255, 0.3); }
     .selected { outline: 3px solid red; }
-    .hint { background-color: var(--hint-color); }
-    #controls { margin: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .hint {
+      background-color: var(--hint-color);
+      position: absolute;
+      top: 3px; left: 3px; right: 3px; bottom: 3px;
+      border-radius: 10px;
+      pointer-events: none;
+    }
+    #controls {
+      margin: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
     button {
       padding: 5px 12px;
       font-size: 14px;
@@ -84,38 +69,27 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    .night {
-      background-color: #111;
-      color: var(--night-text);
-    }
-    footer {
-      margin: 20px;
-      font-size: 14px;
-    }
+    .night { background-color: #111; color: var(--night-text); }
+    footer { margin: 20px; font-size: 14px; }
   </style>
 </head>
 <body>
-  <h1>من تصميم Ahmed Gallal ÂĜ</h1>
-  <div id="dedication">أول نسخة مهداة إلى حوش المنا</div>
-  <div id="version">إصدار أول - 2025</div>
-  <div id="turnInfo">الدور: الأبيض</div>
+  <h1>Designed by Ahmed Gallal ÂĜ</h1>
+  <div id="dedication">First version dedicated to Hosh Almuna</div>
+  <div id="version">Version 1 - 2025</div>  <div id="turnInfo">Turn: White</div>
   <div id="timers">
-    ⏱️ وقت الأبيض: <span id="whiteTimer">05:00</span> | ⏱️ وقت الأسود: <span id="blackTimer">05:00</span>
-  </div>
-  <select id="gameMode" onchange="resetGame()">
-    <option value="human">🧑 لعب مع شخص</option>
-    <option value="ai-easy">🤖 ذكاء اصطناعي (سهل)</option>
-    <option value="ai-hard">🧠 ذكاء اصطناعي (صعب)</option>
-  </select>
-  <div class="board" id="chessboard"></div>
-  <div id="controls">
-    <button onclick="undoMove()">تراجع</button>
-    <button onclick="toggleNightMode()">الوضع الليلي</button>
-    <button onclick="resetGame()">إعادة</button>
-  </div>
-  <footer>تصميم أحمد جلال ÂĜ - 2025</footer>
-  <script>
-    // سيُضاف هنا كامل كود اللعبة JavaScript في الخطوة القادمة
-  </script>
-</body>
+    ⏱️ White Time: <span id="whiteTimer">05:00</span> |
+    ⏱️ Black Time: <span id="blackTimer">05:00</span>
+  </div>  <select id="gameMode" onchange="resetGame()">
+    <option value="human">🧑 Play with Person</option>
+    <option value="ai-easy">🤖 AI (Easy)</option>
+    <option value="ai-hard">🧠 AI (Hard)</option>
+  </select>  <div class="board" id="chessboard"></div>  <div id="controls">
+    <button onclick="undoMove()">Undo</button>
+    <button onclick="toggleNightMode()">Night Mode</button>
+    <button onclick="resetGame()">Reset</button>
+  </div>  <footer>Made with ❤️ by Ahmed Gallal ÂĜ</footer>  <script>
+    // JavaScript for full game functionality goes here
+    // (will be inserted next if you confirm)
+  </script></body>
 </html>
