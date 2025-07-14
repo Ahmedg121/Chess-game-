@@ -116,6 +116,7 @@
       grid-template-rows: repeat(8, 65px);
       border: 4px solid #5d4037;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      position: relative;
     }
     
     .cell {
@@ -181,14 +182,20 @@
       color: rgba(255, 255, 255, 0.7);
       font-weight: bold;
       z-index: 3;
+      pointer-events: none;
     }
     
     .file-notation {
-      bottom: -25px;
+      bottom: -20px;
+      width: 65px;
+      text-align: center;
     }
     
     .rank-notation {
-      left: -25px;
+      left: -20px;
+      height: 65px;
+      display: flex;
+      align-items: center;
     }
     
     .game-info {
@@ -401,6 +408,18 @@
       .cell {
         font-size: 8vw;
       }
+      
+      .notation {
+        font-size: 12px;
+      }
+      
+      .file-notation {
+        bottom: -18px;
+      }
+      
+      .rank-notation {
+        left: -18px;
+      }
     }
     
     @media (max-width: 600px) {
@@ -423,20 +442,65 @@
       .controls {
         grid-template-columns: 1fr;
       }
+      
+      .notation {
+        font-size: 10px;
+      }
+      
+      .file-notation {
+        bottom: -15px;
+      }
+      
+      .rank-notation {
+        left: -15px;
+      }
     }
     
     .chess-piece {
       font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      transition: transform 0.2s ease;
     }
     
     .white-piece {
       color: #f0f0f0;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     }
     
     .black-piece {
       color: #333;
-      text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+    }
+    
+    .piece-label {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      font-size: 8px;
+      color: rgba(0,0,0,0.4);
+      pointer-events: none;
+    }
+    
+    .captured-pieces {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+      min-height: 30px;
+    }
+    
+    .captured-piece {
+      font-size: 24px;
+      display: inline-block;
+    }
+    
+    .captured-title {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #5d4037;
+      text-align: center;
+    }
+    
+    body.night-mode .captured-title {
+      color: #d7ccc8;
     }
   </style>
 </head>
@@ -469,6 +533,10 @@
           </div>
           
           <div id="gameStatus" class="game-status"></div>
+          
+          <div class="captured-title">القطع المأخوذة:</div>
+          <div class="captured-pieces" id="whiteCaptured"></div>
+          <div class="captured-pieces" id="blackCaptured"></div>
         </div>
         
         <div class="mode-selector">
@@ -523,11 +591,39 @@
     const whiteTimerEl = document.getElementById("whiteTimer");
     const blackTimerEl = document.getElementById("blackTimer");
     const gameStatusEl = document.getElementById("gameStatus");
+    const whiteCapturedEl = document.getElementById("whiteCaptured");
+    const blackCapturedEl = document.getElementById("blackCaptured");
 
-    // Using Unicode characters for chess pieces that work across browsers
+    // Using Font Awesome for chess pieces for better cross-browser compatibility
     const pieceIcons = {
-      'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
-      'bp': '♟', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
+      'wp': '<i class="fas fa-chess-pawn"></i>',
+      'wr': '<i class="fas fa-chess-rook"></i>',
+      'wn': '<i class="fas fa-chess-knight"></i>',
+      'wb': '<i class="fas fa-chess-bishop"></i>',
+      'wq': '<i class="fas fa-chess-queen"></i>',
+      'wk': '<i class="fas fa-chess-king"></i>',
+      'bp': '<i class="fas fa-chess-pawn"></i>',
+      'br': '<i class="fas fa-chess-rook"></i>',
+      'bn': '<i class="fas fa-chess-knight"></i>',
+      'bb': '<i class="fas fa-chess-bishop"></i>',
+      'bq': '<i class="fas fa-chess-queen"></i>',
+      'bk': '<i class="fas fa-chess-king"></i>'
+    };
+
+    // Piece labels for better identification
+    const pieceLabels = {
+      'wp': 'ب',
+      'wr': 'ر',
+      'wn': 'ح',
+      'wb': 'ف',
+      'wq': 'م',
+      'wk': 'ك',
+      'bp': 'ب',
+      'br': 'ر',
+      'bn': 'ح',
+      'bb': 'ف',
+      'bq': 'م',
+      'bk': 'ك'
     };
 
     // Initial board setup
@@ -551,10 +647,11 @@
     let aiThinking = false;
     let gameActive = true;
     let kingPositions = { w: [7, 4], b: [0, 4] };
+    let capturedPieces = { w: [], b: [] };
     
     // Files and ranks for notation
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+    const files = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح'];
+    const ranks = ['٨', '٧', '٦', '٥', '٤', '٣', '٢', '١'];
 
     // Initialize the game
     function initGame() {
@@ -562,12 +659,32 @@
       resetTimers();
       updateTurnIndicator();
       gameStatusEl.style.display = 'none';
+      updateCapturedPieces();
     }
 
     // Set up the chess board
     function setupBoard() {
       board.innerHTML = '';
       
+      // Create notation for files (columns)
+      for (let c = 0; c < 8; c++) {
+        const fileNotation = document.createElement('div');
+        fileNotation.className = 'notation file-notation';
+        fileNotation.textContent = files[c];
+        fileNotation.style.left = `${c * 65 + 32}px`;
+        board.appendChild(fileNotation);
+      }
+      
+      // Create notation for ranks (rows)
+      for (let r = 0; r < 8; r++) {
+        const rankNotation = document.createElement('div');
+        rankNotation.className = 'notation rank-notation';
+        rankNotation.textContent = ranks[r];
+        rankNotation.style.top = `${r * 65 + 32}px`;
+        board.appendChild(rankNotation);
+      }
+      
+      // Create board cells
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           const cell = document.createElement('div');
@@ -576,31 +693,21 @@
           cell.dataset.col = c;
           
           if (boardState[r][c]) {
-            const piece = document.createElement('span');
+            const piece = document.createElement('div');
             piece.className = `chess-piece ${boardState[r][c][0] === 'w' ? 'white-piece' : 'black-piece'}`;
-            piece.textContent = pieceIcons[boardState[r][c]];
+            piece.innerHTML = pieceIcons[boardState[r][c]];
+            
+            // Add piece label for identification
+            const label = document.createElement('div');
+            label.className = 'piece-label';
+            label.textContent = pieceLabels[boardState[r][c]];
+            piece.appendChild(label);
+            
             cell.appendChild(piece);
           }
           
           cell.onclick = () => onCellClick(r, c);
           board.appendChild(cell);
-          
-          // Add notation to the first row and column
-          if (r === 7) {
-            const fileNotation = document.createElement('div');
-            fileNotation.className = 'notation file-notation';
-            fileNotation.textContent = files[c];
-            fileNotation.style.left = `${c * 65 + 32}px`;
-            boardContainer.appendChild(fileNotation);
-          }
-          
-          if (c === 0) {
-            const rankNotation = document.createElement('div');
-            rankNotation.className = 'notation rank-notation';
-            rankNotation.textContent = ranks[r];
-            rankNotation.style.top = `${r * 65 + 32}px`;
-            boardContainer.appendChild(rankNotation);
-          }
         }
       }
     }
@@ -642,6 +749,12 @@
       const selectedPiece = boardState[fromR][fromC];
       const targetPiece = boardState[toR][toC];
       
+      // Add captured piece to the list
+      if (targetPiece) {
+        capturedPieces[currentTurn].push(targetPiece);
+        updateCapturedPieces();
+      }
+      
       // Save the move to history
       moveHistory.push({
         board: JSON.parse(JSON.stringify(boardState)),
@@ -649,7 +762,8 @@
         to: [toR, toC],
         piece: selectedPiece,
         captured: targetPiece,
-        kingPos: {...kingPositions}
+        kingPos: {...kingPositions},
+        capturedPieces: JSON.parse(JSON.stringify(capturedPieces))
       });
       
       // Move the piece
@@ -710,7 +824,7 @@
     
     // Get a cell element
     function getCell(r, c) {
-      return board.children[r * 8 + c];
+      return board.children[r * 8 + c + 16]; // +16 because of notation elements
     }
     
     // Clear current selection
@@ -917,11 +1031,19 @@
         for (let c = 0; c < 8; c++) {
           const cell = getCell(r, c);
           cell.innerHTML = '';
+          cell.className = `cell ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
           
           if (boardState[r][c]) {
-            const piece = document.createElement('span');
+            const piece = document.createElement('div');
             piece.className = `chess-piece ${boardState[r][c][0] === 'w' ? 'white-piece' : 'black-piece'}`;
-            piece.textContent = pieceIcons[boardState[r][c]];
+            piece.innerHTML = pieceIcons[boardState[r][c]];
+            
+            // Add piece label for identification
+            const label = document.createElement('div');
+            label.className = 'piece-label';
+            label.textContent = pieceLabels[boardState[r][c]];
+            piece.appendChild(label);
+            
             cell.appendChild(piece);
           }
         }
@@ -931,13 +1053,24 @@
       isKingInCheck(currentTurn === 'w' ? 'b' : 'w');
     }
     
+    // Update captured pieces display
+    function updateCapturedPieces() {
+      whiteCapturedEl.innerHTML = capturedPieces.w.map(p => {
+        return `<span class="captured-piece ${p[0] === 'w' ? 'black-piece' : 'white-piece'}">${pieceIcons[p]}</span>`;
+      }).join('');
+      
+      blackCapturedEl.innerHTML = capturedPieces.b.map(p => {
+        return `<span class="captured-piece ${p[0] === 'w' ? 'black-piece' : 'white-piece'}">${pieceIcons[p]}</span>`;
+      }).join('');
+    }
+    
     // Update turn indicator
     function updateTurnIndicator() {
       if (currentTurn === 'w') {
-        turnIndicator.textContent = '🧠 دور الأبيض';
+        turnIndicator.innerHTML = '<i class="fas fa-chess-king"></i> دور الأبيض';
         turnIndicator.className = 'turn-indicator white-turn';
       } else {
-        turnIndicator.textContent = '🧠 دور الأسود';
+        turnIndicator.innerHTML = '<i class="fas fa-chess-king"></i> دور الأسود';
         turnIndicator.className = 'turn-indicator black-turn';
       }
     }
@@ -992,6 +1125,7 @@
       const lastMove = moveHistory.pop();
       boardState = lastMove.board;
       kingPositions = lastMove.kingPos;
+      capturedPieces = lastMove.capturedPieces;
       
       // Switch turns back
       currentTurn = currentTurn === 'w' ? 'b' : 'w';
@@ -999,6 +1133,7 @@
       updateBoard();
       clearSelection();
       updateTurnIndicator();
+      updateCapturedPieces();
       gameStatusEl.style.display = 'none';
       gameActive = true;
       
@@ -1019,6 +1154,7 @@
       kingPositions = { w: [7, 4], b: [0, 4] };
       currentTurn = 'w';
       moveHistory = [];
+      capturedPieces = { w: [], b: [] };
       clearSelection();
       gameStatusEl.style.display = 'none';
       gameActive = true;
@@ -1026,6 +1162,7 @@
       resetTimers();
       updateBoard();
       updateTurnIndicator();
+      updateCapturedPieces();
       startTimer();
     }
     
