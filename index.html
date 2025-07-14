@@ -1,9 +1,10 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sudanese Chess - Designed by Ahmed Gallal ÂĜ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --white: #eeeed2; --black: #769656; --night-white: #444;
@@ -42,6 +43,7 @@
       font-size: 32px;
       cursor: pointer;
       position: relative;
+      user-select: none;
     }
     .white { background-color: var(--white); }
     .black { background-color: var(--black); }
@@ -68,6 +70,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      user-select: none;
     }
     .night { background-color: #111; color: var(--night-text); }
     footer { margin: 20px; font-size: 14px; }
@@ -76,20 +79,245 @@
 <body>
   <h1>Designed by Ahmed Gallal ÂĜ</h1>
   <div id="dedication">First version dedicated to Hosh Almuna</div>
-  <div id="version">Version 1 - 2025</div>  <div id="turnInfo">Turn: White</div>
+  <div id="version">Version 1 - 2025</div>
+
+  <div id="turnInfo">Turn: White</div>
   <div id="timers">
     ⏱️ White Time: <span id="whiteTimer">05:00</span> |
     ⏱️ Black Time: <span id="blackTimer">05:00</span>
-  </div>  <select id="gameMode" onchange="resetGame()">
+  </div>
+
+  <select id="gameMode" onchange="resetGame()">
     <option value="human">🧑 Play with Person</option>
     <option value="ai-easy">🤖 AI (Easy)</option>
     <option value="ai-hard">🧠 AI (Hard)</option>
-  </select>  <div class="board" id="chessboard"></div>  <div id="controls">
+  </select>
+
+  <div class="board" id="chessboard"></div>
+
+  <div id="controls">
     <button onclick="undoMove()">Undo</button>
     <button onclick="toggleNightMode()">Night Mode</button>
     <button onclick="resetGame()">Reset</button>
-  </div>  <footer>Made with ❤️ by Ahmed Gallal ÂĜ</footer>  <script>
-    // JavaScript for full game functionality goes here
-    // (will be inserted next if you confirm)
-  </script></body>
-</html>
+  </div>
+
+  <footer>Made with ❤️ by Ahmed Gallal ÂĜ</footer>
+
+  <script>
+    const moveSound = new Audio('https://upload.wikimedia.org/wikipedia/commons/8/88/Chess_move.wav');
+
+    const board = document.getElementById("chessboard");
+    const turnInfo = document.getElementById("turnInfo");
+    const gameModeSelect = document.getElementById("gameMode");
+    const whiteTimerEl = document.getElementById("whiteTimer");
+    const blackTimerEl = document.getElementById("blackTimer");
+
+    const pieceIcons = {
+      'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
+      'bp': '♟︎', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
+    };
+
+    let boardState = [];
+    let selected = null;
+    let currentTurn = 'w';
+    let moveHistory = [];
+    let whiteTime = 300, blackTime = 300;
+    let timerInterval;
+    let aiThinking = false;
+
+    function setupBoard() {
+      const layout = [
+        ['br','bn','bb','bq','bk','bb','bn','br'],
+        Array(8).fill('bp'),
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        Array(8).fill('wp'),
+        ['wr','wn','wb','wq','wk','wb','wn','wr']
+      ];
+      board.innerHTML = '';
+      boardState = layout.map(row => [...row]);
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell ' + ((r + c) % 2 === 0 ? 'white' : 'black');
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.textContent = pieceIcons[layout[r][c]] || '';
+          cell.onclick = () => onCellClick(r, c);
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    function onCellClick(r, c) {
+      if (aiThinking) return; // Prevent interaction during AI turn
+      const piece = boardState[r][c];
+      const cell = getCell(r, c);
+
+      if (selected) {
+        const [fromR, fromC] = selected;
+        const selectedPiece = boardState[fromR][fromC];
+        if (canMove(selectedPiece, fromR, fromC, r, c)) {
+          moveSound.play();
+          moveHistory.push(JSON.parse(JSON.stringify(boardState)));
+          boardState[r][c] = boardState[fromR][fromC];
+          boardState[fromR][fromC] = '';
+          // Pawn promotion
+          if (boardState[r][c][1] === 'p' && (r === 0 || r === 7)) {
+            boardState[r][c] = currentTurn + 'q';
+          }
+          updateBoard();
+          if (isCheckmate(opponent())) {
+            setTimeout(() => alert('Checkmate! Game over!'), 200);
+          }
+          currentTurn = opponent();
+          turnInfo.textContent = `Turn: ${currentTurn === 'w' ? 'White' : 'Black'}`;
+          startTimer();
+          clearSelection();
+          selected = null;
+
+          if (gameModeSelect.value.startsWith('ai') && currentTurn === 'b') {
+            aiThinking = true;
+            setTimeout(() => {
+              makeAIMove();
+              aiThinking = false;
+            }, 300);
+          }
+          return;
+        }
+        clearSelection();
+        selected = null;
+      }
+      if (piece && piece[0] === currentTurn) {
+        clearSelection();
+        selected = [r, c];
+        cell.classList.add('selected');
+        showHints(r, c);
+      }
+    }
+
+    function getCell(r, c) {
+      return board.children[r * 8 + c];
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected', 'hint'));
+    }
+
+    function showHints(fr, fc) {
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (canMove(boardState[fr][fc], fr, fc, r, c)) {
+            getCell(r, c).classList.add('hint');
+          }
+        }
+      }
+    }
+
+    function updateBoard() {
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          getCell(r, c).textContent = pieceIcons[boardState[r][c]] || '';
+        }
+      }
+    }
+
+    function opponent() {
+      return currentTurn === 'w' ? 'b' : 'w';
+    }
+
+    function canMove(piece, fr, fc, tr, tc) {
+      if (!piece) return false;
+      const target = boardState[tr][tc];
+      if (target && target[0] === piece[0]) return false;
+      const dr = tr - fr;
+      const dc = tc - fc;
+      const absR = Math.abs(dr);
+      const absC = Math.abs(dc);
+
+      switch (piece[1]) {
+        case 'p': {
+          const dir = piece[0] === 'w' ? -1 : 1;
+          // Move forward
+          if (dc === 0 && !target) {
+            if (dr === dir) return true;
+            if ((fr === (piece[0] === 'w' ? 6 : 1)) && dr === 2 * dir && !boardState[fr + dir][fc]) return true;
+          } else if (absC === 1 && dr === dir && target && target[0] !== piece[0]) {
+            return true;
+          }
+          return false;
+        }
+        case 'r':
+          return (dr === 0 || dc === 0) && clearPath(fr, fc, tr, tc);
+        case 'b':
+          return absR === absC && clearPath(fr, fc, tr, tc);
+        case 'q':
+          return (dr === 0 || dc === 0 || absR === absC) && clearPath(fr, fc, tr, tc);
+        case 'k':
+          return absR <= 1 && absC <= 1;
+        case 'n':
+          return (absR === 2 && absC === 1) || (absR === 1 && absC === 2);
+      }
+      return false;
+    }
+
+    function clearPath(fr, fc, tr, tc) {
+      const stepR = Math.sign(tr - fr);
+      const stepC = Math.sign(tc - fc);
+      let r = fr + stepR;
+      let c = fc + stepC;
+      while (r !== tr || c !== tc) {
+        if (boardState[r][c]) return false;
+        r += stepR;
+        c += stepC;
+      }
+      return true;
+    }
+
+    function isCheckmate(color) {
+      // Simple check: if king is missing, it's checkmate
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (boardState[r][c] === color + 'k') return false;
+        }
+      }
+      return true;
+    }
+
+    function undoMove() {
+      if (moveHistory.length > 0) {
+        boardState = moveHistory.pop();
+        currentTurn = opponent();
+        updateBoard();
+        turnInfo.textContent = `Turn: ${currentTurn === 'w' ? 'White' : 'Black'}`;
+        startTimer();
+      }
+    }
+
+    function toggleNightMode() {
+      document.body.classList.toggle('night');
+    }
+
+    function resetGame() {
+      setupBoard();
+      moveHistory = [];
+      currentTurn = 'w';
+      whiteTime = 300;
+      blackTime = 300;
+      updateTimers();
+      turnInfo.textContent = `Turn: White`;
+      clearSelection();
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (currentTurn === 'w') whiteTime--;
+        else blackTime--;
+        updateTimers();
+        if (whiteTime <= 0 || blackTime <= 0) {
+          clearInterval(timerInterval);
+          alert(currentTurn
