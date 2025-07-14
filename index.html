@@ -10,6 +10,7 @@
       --white: #eeeed2; --black: #769656; --night-white: #444;
       --night-black: #222; --night-text: #eee;
       --hint-color: rgba(0, 0, 255, 0.3);
+      --capture-hint: rgba(255, 0, 0, 0.4);
     }
     body {
       margin: 0; padding: 0;
@@ -20,97 +21,251 @@
       align-items: center; justify-content: flex-start;
       min-height: 100vh;
       transition: all 0.3s ease;
+      background-image: linear-gradient(135deg, #f5f7fa 0%, #e4e7f0 100%);
     }
-    h1 { margin: 10px 0 5px; font-size: 32px; color: #222; }
-    #dedication { font-size: 18px; margin-bottom: 5px; color: #555; }
-    #version { font-size: 14px; color: #888; margin-bottom: 10px; }
-    #turnInfo { margin: 5px; font-weight: bold; }
+    .header {
+      text-align: center;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      margin: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 95%;
+      max-width: 600px;
+    }
+    h1 { 
+      margin: 10px 0 5px; 
+      font-size: 32px; 
+      color: #222; 
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    #dedication { 
+      font-size: 18px; 
+      margin-bottom: 5px; 
+      color: #555; 
+      font-weight: bold;
+    }
+    #version { 
+      font-size: 14px; 
+      color: #888; 
+      margin-bottom: 10px; 
+    }
+    #turnInfo { 
+      margin: 5px; 
+      font-weight: bold; 
+      font-size: 20px;
+      padding: 8px 15px;
+      border-radius: 20px;
+      background: #f0f0f0;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    }
     #timers {
-      font-size: 14px; margin-bottom: 5px; color: #333;
+      font-size: 16px; 
+      margin-bottom: 10px; 
+      color: #333;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      width: 100%;
     }
-    select { margin: 5px; padding: 4px; font-size: 14px; }
+    .timer {
+      padding: 8px 15px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.7);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-width: 120px;
+      text-align: center;
+    }
+    select { 
+      margin: 10px; 
+      padding: 8px 12px; 
+      font-size: 16px; 
+      border-radius: 8px;
+      border: 2px solid #769656;
+      background: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .board-container {
+      position: relative;
+      margin: 10px 0 20px;
+      padding: 15px;
+      background: #d4d4d4;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
     .board {
       display: grid;
       grid-template-columns: repeat(8, 60px);
       grid-template-rows: repeat(8, 60px);
-      border: 3px solid #333;
-      margin-bottom: 10px;
+      border: 4px solid #5a4d41;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
     }
     .cell {
       width: 60px; height: 60px;
       display: flex; align-items: center;
       justify-content: center;
-      font-size: 32px;
+      font-size: 40px;
       cursor: pointer;
       position: relative;
       user-select: none;
+      transition: all 0.2s ease;
     }
     .white { background-color: var(--white); }
     .black { background-color: var(--black); }
     .night .white { background-color: var(--night-white); }
     .night .black { background-color: var(--night-black); }
-    .selected { outline: 3px solid red; }
+    .selected { 
+      outline: 3px solid red;
+      transform: scale(0.95);
+      z-index: 10;
+    }
     .hint {
       background-color: var(--hint-color);
       position: absolute;
-      top: 3px; left: 3px; right: 3px; bottom: 3px;
-      border-radius: 10px;
+      top: 10px; left: 10px; right: 10px; bottom: 10px;
+      border-radius: 50%;
       pointer-events: none;
+      z-index: 1;
+    }
+    .capture-hint {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border: 4px solid var(--capture-hint);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 2;
     }
     #controls {
       margin: 10px;
       display: flex;
-      gap: 10px;
+      gap: 15px;
       flex-wrap: wrap;
       justify-content: center;
+      width: 100%;
+      max-width: 500px;
     }
     button {
-      padding: 5px 12px;
-      font-size: 14px;
+      padding: 10px 20px;
+      font-size: 16px;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       user-select: none;
+      font-weight: bold;
+      transition: all 0.2s;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+      background: #769656;
+      color: white;
+      min-width: 120px;
     }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 8px rgba(0,0,0,0.3);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    #undoBtn { background: #d4af37; }
+    #nightBtn { background: #2c3e50; }
+    #resetBtn { background: #c94c4c; }
     .night { background-color: #111; color: var(--night-text); }
-    footer { margin: 20px; font-size: 14px; }
+    footer { 
+      margin: 20px; 
+      font-size: 16px; 
+      text-align: center;
+      color: #555;
+    }
+    .notation {
+      position: absolute;
+      font-size: 12px;
+      color: rgba(0,0,0,0.7);
+    }
+    .file-notation {
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .rank-notation {
+      right: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .game-info {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      width: 95%;
+      max-width: 600px;
+      text-align: center;
+    }
+    .status {
+      font-weight: bold;
+      font-size: 18px;
+      color: #c94c4c;
+      margin: 5px 0;
+    }
+    @media (max-width: 600px) {
+      .board {
+        grid-template-columns: repeat(8, 45px);
+        grid-template-rows: repeat(8, 45px);
+      }
+      .cell {
+        width: 45px; 
+        height: 45px;
+        font-size: 30px;
+      }
+      h1 { font-size: 24px; }
+      #dedication { font-size: 16px; }
+      button { padding: 8px 15px; font-size: 14px; min-width: 100px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Designed by Ahmed Gallal ÂĜ</h1>
-  <div id="dedication">First version dedicated to Hosh Almuna</div>
-  <div id="version">Version 1 - 2025</div>
-
-  <div id="turnInfo">Turn: White</div>
-  <div id="timers">
-    ⏱️ White Time: <span id="whiteTimer">05:00</span> |
-    ⏱️ Black Time: <span id="blackTimer">05:00</span>
+  <div class="header">
+    <h1>♞ Sudanese Chess ♞</h1>
+    <div id="dedication">Designed by Ahmed Gallal ÂĜ</div>
+    <div id="version">First version dedicated to Hosh Almuna | Version 1 - 2025</div>
   </div>
 
-  <select id="gameMode" onchange="resetGame()">
+  <div id="turnInfo">Turn: White</div>
+  
+  <div id="timers">
+    <div class="timer">⏱️ White: <span id="whiteTimer">05:00</span></div>
+    <div class="timer">⏱️ Black: <span id="blackTimer">05:00</span></div>
+  </div>
+
+  <select id="gameMode">
     <option value="human">🧑 Play with Person</option>
     <option value="ai-easy">🤖 AI (Easy)</option>
     <option value="ai-hard">🧠 AI (Hard)</option>
   </select>
 
-  <div class="board" id="chessboard"></div>
-
-  <div id="controls">
-    <button onclick="undoMove()">Undo</button>
-    <button onclick="toggleNightMode()">Night Mode</button>
-    <button onclick="resetGame()">Reset</button>
+  <div class="board-container">
+    <div class="board" id="chessboard"></div>
   </div>
 
-  <footer>Made with ❤️ by Ahmed Gallal ÂĜ</footer>
+  <div class="game-info">
+    <div id="gameStatus" class="status"></div>
+  </div>
+
+  <div id="controls">
+    <button id="undoBtn" onclick="undoMove()">Undo Move</button>
+    <button id="nightBtn" onclick="toggleNightMode()">Night Mode</button>
+    <button id="resetBtn" onclick="resetGame()">Reset Game</button>
+  </div>
+
+  <footer>Made with ❤️ by Ahmed Gallal ÂĜ | Sudanese Chess © 2025</footer>
 
   <script>
-    const moveSound = new Audio('https://upload.wikimedia.org/wikipedia/commons/8/88/Chess_move.wav');
-
+    // Initialize game variables
     const board = document.getElementById("chessboard");
     const turnInfo = document.getElementById("turnInfo");
     const gameModeSelect = document.getElementById("gameMode");
     const whiteTimerEl = document.getElementById("whiteTimer");
     const blackTimerEl = document.getElementById("blackTimer");
+    const gameStatus = document.getElementById("gameStatus");
 
     const pieceIcons = {
       'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
@@ -124,7 +279,20 @@
     let whiteTime = 300, blackTime = 300;
     let timerInterval;
     let aiThinking = false;
+    let gameActive = true;
+    
+    // Files and ranks for notation
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
+    // Initialize the game
+    function initGame() {
+      setupBoard();
+      setupNotation();
+      resetGame();
+    }
+
+    // Set up the chess board
     function setupBoard() {
       const layout = [
         ['br','bn','bb','bq','bk','bb','bn','br'],
@@ -136,69 +304,398 @@
         Array(8).fill('wp'),
         ['wr','wn','wb','wq','wk','wb','wn','wr']
       ];
+      
       board.innerHTML = '';
       boardState = layout.map(row => [...row]);
+      
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           const cell = document.createElement('div');
           cell.className = 'cell ' + ((r + c) % 2 === 0 ? 'white' : 'black');
           cell.dataset.row = r;
           cell.dataset.col = c;
-          cell.textContent = pieceIcons[layout[r][c]] || '';
+          
+          if (layout[r][c]) {
+            cell.textContent = pieceIcons[layout[r][c]];
+          }
+          
           cell.onclick = () => onCellClick(r, c);
           board.appendChild(cell);
         }
       }
     }
+    
+    // Add chess notation to the board
+    function setupNotation() {
+      // File notations (a-h)
+      for (let c = 0; c < 8; c++) {
+        const notation = document.createElement('div');
+        notation.className = 'notation file-notation';
+        notation.textContent = files[c];
+        notation.style.left = `${(c * 60) + 30}px`;
+        board.parentElement.appendChild(notation);
+      }
+      
+      // Rank notations (1-8)
+      for (let r = 0; r < 8; r++) {
+        const notation = document.createElement('div');
+        notation.className = 'notation rank-notation';
+        notation.textContent = ranks[r];
+        notation.style.top = `${(r * 60) + 30}px`;
+        board.parentElement.appendChild(notation);
+      }
+    }
 
+    // Handle cell clicks
     function onCellClick(r, c) {
-      if (aiThinking) return;
+      if (!gameActive || aiThinking) return;
+      
       const piece = boardState[r][c];
       const cell = getCell(r, c);
-
+      
+      // If a piece is already selected
       if (selected) {
         const [fromR, fromC] = selected;
         const selectedPiece = boardState[fromR][fromC];
+        
+        // Check if the move is valid
         if (canMove(selectedPiece, fromR, fromC, r, c)) {
-          moveSound.play();
-          moveHistory.push(JSON.parse(JSON.stringify(boardState)));
-          boardState[r][c] = selectedPiece;
-          boardState[fromR][fromC] = '';
-          if (boardState[r][c][1] === 'p' && (r === 0 || r === 7)) {
-            boardState[r][c] = currentTurn + 'q';
-          }
-          updateBoard();
-          if (isCheckmate(opponent())) {
-            setTimeout(() => alert('Checkmate! Game over!'), 200);
-          }
-          currentTurn = opponent();
-          turnInfo.textContent = `Turn: ${currentTurn === 'w' ? 'White' : 'Black'}`;
-          startTimer();
-          clearSelection();
-          selected = null;
-
-          if (gameModeSelect.value.startsWith('ai') && currentTurn === 'b') {
-            aiThinking = true;
-            setTimeout(() => {
-              makeAIMove();
-              aiThinking = false;
-            }, 300);
-          }
+          makeMove(fromR, fromC, r, c);
           return;
         }
-        clearSelection();
-        selected = null;
-      }
-      if (piece && piece[0] === currentTurn) {
-        clearSelection();
-        selected = [r, c];
-        cell.classList.add('selected');
-        showHints(r, c);
+        
+        // If clicking on another piece of the same color, select that piece instead
+        if (piece && piece[0] === currentTurn) {
+          clearSelection();
+          selectPiece(r, c);
+        } else {
+          clearSelection();
+        }
+      } 
+      // Select a piece if it belongs to the current player
+      else if (piece && piece[0] === currentTurn) {
+        selectPiece(r, c);
       }
     }
-
+    
+    // Make a move on the board
+    function makeMove(fromR, fromC, toR, toC) {
+      const selectedPiece = boardState[fromR][fromC];
+      const targetPiece = boardState[toR][toC];
+      
+      // Save the move to history
+      moveHistory.push({
+        board: JSON.parse(JSON.stringify(boardState)),
+        from: [fromR, fromC],
+        to: [toR, toC],
+        piece: selectedPiece,
+        captured: targetPiece
+      });
+      
+      // Move the piece
+      boardState[toR][toC] = selectedPiece;
+      boardState[fromR][fromC] = '';
+      
+      // Pawn promotion
+      if (selectedPiece[1] === 'p' && (toR === 0 || toR === 7)) {
+        boardState[toR][toC] = currentTurn + 'q';
+      }
+      
+      // Update the board display
+      updateBoard();
+      
+      // Check for game end conditions
+      if (isCheckmate(opponent())) {
+        gameStatus.textContent = `Checkmate! ${currentTurn === 'w' ? 'White' : 'Black'} wins!`;
+        gameActive = false;
+        clearInterval(timerInterval);
+      }
+      
+      // Switch turns
+      currentTurn = opponent();
+      turnInfo.textContent = `Turn: ${currentTurn === 'w' ? 'White' : 'Black'}`;
+      
+      // Start timer for the next player
+      startTimer();
+      
+      // Clear selection
+      clearSelection();
+      
+      // AI move if applicable
+      if (gameModeSelect.value.startsWith('ai') && currentTurn === 'b' && gameActive) {
+        aiThinking = true;
+        setTimeout(() => {
+          makeAIMove();
+          aiThinking = false;
+        }, 500);
+      }
+    }
+    
+    // Get a cell element
     function getCell(r, c) {
       return board.children[r * 8 + c];
     }
-
-    function clear
+    
+    // Clear current selection
+    function clearSelection() {
+      const selectedCell = document.querySelector('.selected');
+      if (selectedCell) {
+        selectedCell.classList.remove('selected');
+      }
+      document.querySelectorAll('.hint, .capture-hint').forEach(el => el.remove());
+      selected = null;
+    }
+    
+    // Select a piece and show hints
+    function selectPiece(r, c) {
+      selected = [r, c];
+      getCell(r, c).classList.add('selected');
+      showHints(r, c);
+    }
+    
+    // Show possible moves for a piece
+    function showHints(r, c) {
+      const piece = boardState[r][c];
+      
+      for (let toR = 0; toR < 8; toR++) {
+        for (let toC = 0; toC < 8; toC++) {
+          if (canMove(piece, r, c, toR, toC)) {
+            const cell = getCell(toR, toC);
+            const hint = document.createElement('div');
+            
+            if (boardState[toR][toC]) {
+              hint.className = 'capture-hint';
+            } else {
+              hint.className = 'hint';
+            }
+            
+            cell.appendChild(hint);
+          }
+        }
+      }
+    }
+    
+    // Check if a move is valid
+    function canMove(piece, fromR, fromC, toR, toC) {
+      if (!piece) return false;
+      
+      const pieceType = piece[1];
+      const pieceColor = piece[0];
+      const targetPiece = boardState[toR][toC];
+      
+      // Can't capture your own pieces
+      if (targetPiece && targetPiece[0] === pieceColor) return false;
+      
+      const dr = toR - fromR;
+      const dc = toC - fromC;
+      
+      // Piece-specific movement rules
+      switch (pieceType) {
+        case 'p': // Pawn
+          const direction = pieceColor === 'w' ? -1 : 1;
+          
+          // Move forward
+          if (dc === 0 && !targetPiece) {
+            // Single move
+            if (toR === fromR + direction) return true;
+            // Double move from starting position
+            if ((fromR === 1 && pieceColor === 'b' && toR === 3 && dr === 2) ||
+                (fromR === 6 && pieceColor === 'w' && toR === 4 && dr === -2)) {
+              // Check if path is clear
+              return boardState[fromR + direction][fromC] === '';
+            }
+          }
+          // Capture diagonally
+          if (Math.abs(dc) === 1 && toR === fromR + direction && targetPiece) {
+            return true;
+          }
+          break;
+          
+        case 'r': // Rook
+          if (dr !== 0 && dc !== 0) return false;
+          return isPathClear(fromR, fromC, toR, toC);
+          
+        case 'n': // Knight
+          return (Math.abs(dr) === 2 && Math.abs(dc) === 1) || 
+                 (Math.abs(dr) === 1 && Math.abs(dc) === 2);
+          
+        case 'b': // Bishop
+          if (Math.abs(dr) !== Math.abs(dc)) return false;
+          return isPathClear(fromR, fromC, toR, toC);
+          
+        case 'q': // Queen
+          if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return false;
+          return isPathClear(fromR, fromC, toR, toC);
+          
+        case 'k': // King
+          return Math.abs(dr) <= 1 && Math.abs(dc) <= 1;
+      }
+      
+      return false;
+    }
+    
+    // Check if the path between two positions is clear
+    function isPathClear(fromR, fromC, toR, toC) {
+      const dr = toR - fromR;
+      const dc = toC - fromC;
+      const steps = Math.max(Math.abs(dr), Math.abs(dc));
+      
+      const stepR = dr === 0 ? 0 : dr > 0 ? 1 : -1;
+      const stepC = dc === 0 ? 0 : dc > 0 ? 1 : -1;
+      
+      // Check each square along the path except the final one
+      for (let i = 1; i < steps; i++) {
+        const r = fromR + i * stepR;
+        const c = fromC + i * stepC;
+        if (boardState[r][c] !== '') return false;
+      }
+      
+      return true;
+    }
+    
+    // Get the opponent's color
+    function opponent() {
+      return currentTurn === 'w' ? 'b' : 'w';
+    }
+    
+    // Update the board display
+    function updateBoard() {
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const cell = getCell(r, c);
+          cell.textContent = boardState[r][c] ? pieceIcons[boardState[r][c]] : '';
+        }
+      }
+    }
+    
+    // Start the timer for the current player
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (currentTurn === 'w') {
+          whiteTime--;
+          whiteTimerEl.textContent = formatTime(whiteTime);
+          if (whiteTime <= 0) {
+            clearInterval(timerInterval);
+            gameStatus.textContent = "Time's up! Black wins!";
+            gameActive = false;
+          }
+        } else {
+          blackTime--;
+          blackTimerEl.textContent = formatTime(blackTime);
+          if (blackTime <= 0) {
+            clearInterval(timerInterval);
+            gameStatus.textContent = "Time's up! White wins!";
+            gameActive = false;
+          }
+        }
+      }, 1000);
+    }
+    
+    // Format time as MM:SS
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Undo the last move
+    function undoMove() {
+      if (moveHistory.length === 0 || !gameActive) return;
+      
+      const lastMove = moveHistory.pop();
+      boardState = lastMove.board;
+      currentTurn = currentTurn === 'w' ? 'b' : 'w';
+      
+      updateBoard();
+      clearSelection();
+      turnInfo.textContent = `Turn: ${currentTurn === 'w' ? 'White' : 'Black'}`;
+      gameStatus.textContent = '';
+      gameActive = true;
+      
+      // Reset timers to previous state
+      whiteTime = 300;
+      blackTime = 300;
+      whiteTimerEl.textContent = formatTime(whiteTime);
+      blackTimerEl.textContent = formatTime(blackTime);
+      startTimer();
+    }
+    
+    // Toggle night mode
+    function toggleNightMode() {
+      document.body.classList.toggle('night');
+    }
+    
+    // Reset the game
+    function resetGame() {
+      clearInterval(timerInterval);
+      whiteTime = 300;
+      blackTime = 300;
+      whiteTimerEl.textContent = formatTime(whiteTime);
+      blackTimerEl.textContent = formatTime(blackTime);
+      currentTurn = 'w';
+      moveHistory = [];
+      clearSelection();
+      gameStatus.textContent = '';
+      turnInfo.textContent = 'Turn: White';
+      gameActive = true;
+      
+      setupBoard();
+    }
+    
+    // Check for checkmate
+    function isCheckmate(color) {
+      // Simplified checkmate logic
+      // In a real implementation, this would check if the king is in check and has no legal moves
+      return false;
+    }
+    
+    // AI makes a move
+    function makeAIMove() {
+      if (!gameActive) return;
+      
+      const difficulty = gameModeSelect.value.split('-')[1];
+      const moves = [];
+      
+      // Find all possible moves for black pieces
+      for (let fromR = 0; fromR < 8; fromR++) {
+        for (let fromC = 0; fromC < 8; fromC++) {
+          const piece = boardState[fromR][fromC];
+          if (piece && piece[0] === 'b') {
+            for (let toR = 0; toR < 8; toR++) {
+              for (let toC = 0; toC < 8; toC++) {
+                if (canMove(piece, fromR, fromC, toR, toC)) {
+                  moves.push({fromR, fromC, toR, toC});
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Select a move based on difficulty
+      if (moves.length > 0) {
+        let move;
+        if (difficulty === 'easy' || Math.random() < 0.7) {
+          // Random move for easy mode or sometimes in hard mode
+          move = moves[Math.floor(Math.random() * moves.length)];
+        } else {
+          // Prefer captures in hard mode
+          const captureMoves = moves.filter(m => boardState[m.toR][m.toC]);
+          if (captureMoves.length > 0) {
+            move = captureMoves[Math.floor(Math.random() * captureMoves.length)];
+          } else {
+            move = moves[Math.floor(Math.random() * moves.length)];
+          }
+        }
+        
+        // Make the selected move
+        makeMove(move.fromR, move.fromC, move.toR, move.toC);
+      }
+    }
+    
+    // Initialize the game when the page loads
+    window.onload = initGame;
+  </script>
+</body>
+</html>
