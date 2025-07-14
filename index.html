@@ -51,6 +51,7 @@
       border-radius: 15px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
       border: 2px solid #b58863;
+      position: relative;
     }
     
     body.night-mode .header {
@@ -374,6 +375,9 @@
       color: #5d4037;
       font-size: 1.1rem;
       padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     
     body.night-mode .footer {
@@ -420,12 +424,26 @@
         grid-template-columns: 1fr;
       }
     }
+    
+    .chess-piece {
+      font-weight: bold;
+    }
+    
+    .white-piece {
+      color: #f0f0f0;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .black-piece {
+      color: #333;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h1><i class="fas fa-chess"></i> شطرنج سوداني</h1>
-    <div class="subtitle">تصميم: أحمد جلال ÂĜ | الإهداء الأول: هش المنى</div>
+    <div class="subtitle">تصميم: أحمد جلال ÂĜ</div>
     <div class="subtitle">الإصدار 2.0 - 2025</div>
   </div>
   
@@ -492,7 +510,9 @@
   </div>
   
   <div class="footer">
-    صنع بكل ❤️ بواسطة أحمد جلال ÂĜ | الشطرنج السوداني © 2025
+    <div>صنع بكل ❤️ بواسطة أحمد جلال ÂĜ</div>
+    <div>مهداة إلى حوش المنا</div>
+    <div>الشطرنج السوداني © 2025</div>
   </div>
 
   <script>
@@ -504,9 +524,10 @@
     const blackTimerEl = document.getElementById("blackTimer");
     const gameStatusEl = document.getElementById("gameStatus");
 
+    // Using Unicode characters for chess pieces that work across browsers
     const pieceIcons = {
       'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
-      'bp': '♟︎', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
+      'bp': '♟', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
     };
 
     // Initial board setup
@@ -555,7 +576,10 @@
           cell.dataset.col = c;
           
           if (boardState[r][c]) {
-            cell.textContent = pieceIcons[boardState[r][c]];
+            const piece = document.createElement('span');
+            piece.className = `chess-piece ${boardState[r][c][0] === 'w' ? 'white-piece' : 'black-piece'}`;
+            piece.textContent = pieceIcons[boardState[r][c]];
+            cell.appendChild(piece);
           }
           
           cell.onclick = () => onCellClick(r, c);
@@ -892,7 +916,14 @@
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
           const cell = getCell(r, c);
-          cell.textContent = boardState[r][c] ? pieceIcons[boardState[r][c]] : '';
+          cell.innerHTML = '';
+          
+          if (boardState[r][c]) {
+            const piece = document.createElement('span');
+            piece.className = `chess-piece ${boardState[r][c][0] === 'w' ? 'white-piece' : 'black-piece'}`;
+            piece.textContent = pieceIcons[boardState[r][c]];
+            cell.appendChild(piece);
+          }
         }
       }
       
